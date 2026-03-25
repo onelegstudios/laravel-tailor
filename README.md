@@ -1,60 +1,43 @@
-# The artisan tool to customize your Laravel starter kits.
+# Laravel Tailor
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/onelegstudios/laravel-tailor.svg)](https://packagist.org/packages/onelegstudios/laravel-tailor)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/onelegstudios/laravel-tailor/run-tests.yml?branch=main&label=tests)](https://github.com/onelegstudios/laravel-tailor/actions?query=workflow%3Arun-tests+branch%3Amain)
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/onelegstudios/laravel-tailor/fix-php-code-style-issues.yml?branch=main&label=code%20style)](https://github.com/onelegstudios/laravel-tailor/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/onelegstudios/laravel-tailor.svg)](https://packagist.org/packages/onelegstudios/laravel-tailor)
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
-
-## Support us
-
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/laravel-tailor.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/laravel-tailor)
-
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+The artisan tool to customize your Laravel starter kits. Seamlessly transform fresh Livewire installations with curated modifications, architectural tweaks, and optional features. Your foundation, tailored to your workflow.
 
 ## Installation
 
 You can install the package via composer:
 
 ```bash
-composer require onelegstudios/laravel-tailor
-```
-
-You can publish and run the migrations with:
-
-```bash
-php artisan vendor:publish --tag="laravel-tailor-migrations"
-php artisan migrate
-```
-
-You can publish the config file with:
-
-```bash
-php artisan vendor:publish --tag="laravel-tailor-config"
-```
-
-This is the contents of the published config file:
-
-```php
-return [
-];
-```
-
-Optionally, you can publish the views using
-
-```bash
-php artisan vendor:publish --tag="laravel-tailor-views"
+composer require your-vendor/laravel-tailor --dev
 ```
 
 ## Usage
 
+After installing a Laravel Starter Kit, run the tailor command to apply your preferred modifications:
+
 ```php
-$tailor = new Onelegstudios\Tailor();
-echo $tailor->echoPhrase('Hello, Onelegstudios!');
+php artisan tailor:stitch
 ```
+
+You will be prompted to select which modifications to apply, such as:
+
+- Add features here
+
+## Why Tailor?
+
+Standard starter kits are great, but they often require 30 minutes of "massaging" before you can actually start coding. Tailor automates that process, ensuring every project starts with your specific best practices.
+
+- ⚡️ Fast: Transform your kit in seconds.
+- 🛠 Modular: Choose only what you need.
+- 🏗 Scalable: Built with Laravel 13 and Livewire in mind.
+
+## Support
+
+Currently supports the Livewire Starter Kit. Support for Breeze and Jetstream is coming soon.
 
 ## Testing
 
@@ -72,12 +55,12 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ## Security Vulnerabilities
 
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
+Please review [our security policy](https://github.com/onelegstudios/laravel-tailor/security/policy) on how to report security vulnerabilities.
 
 ## Credits
 
 - [Oneleggedswede](https://github.com/oneleggedswede)
-- [All Contributors](../../contributors)
+- [All Contributors](https://github.com/onelegstudios/laravel-tailor/graphs/contributors)
 
 ## License
 
