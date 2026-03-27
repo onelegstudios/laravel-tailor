@@ -71,6 +71,7 @@
         "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
         "build": "@php vendor/bin/testbench workbench:build --ansi",
         "workbench:refresh": [
+            "@php -r \"if (! is_dir(getcwd().'/.git')) { exit(0); }\"",
             "@php bin/refresh-workbench",
             "@php vendor/bin/testbench workbench:build --ansi"
         ],
