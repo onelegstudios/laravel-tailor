@@ -24,6 +24,13 @@ _ide_helper_models.php
 /.fleet
 /.vscode
 
+#AI
+/.ai
+/AGENTS.md
+
+# Testbench Workbench
+/workbench
+
 # Misc
 phpunit.xml
 phpstan.neon
@@ -31,6 +38,4 @@ testbench.yaml
 /docs
 /coverage
 
-#AI
-/.ai
-/AGENTS.md
+

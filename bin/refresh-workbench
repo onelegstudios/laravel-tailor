@@ -1,0 +1,23 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Filesystem\Filesystem;
+use Onelegstudios\Tailor\Support\LivewireWorkbenchRefresher;
+
+require dirname(__DIR__).'/vendor/autoload.php';
+
+$refresher = new LivewireWorkbenchRefresher(new Filesystem());
+
+fwrite(STDOUT, "Refreshing workbench from the latest Livewire starter kit...\n");
+
+try {
+    $refresher->refresh(dirname(__DIR__).'/workbench');
+} catch (Throwable $throwable) {
+    fwrite(STDERR, $throwable->getMessage()."\n");
+
+    exit(1);
+}
+
+fwrite(STDOUT, "Workbench refreshed.\n");
