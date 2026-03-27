@@ -1,5 +1,4 @@
 <?php
-
 namespace Onelegstudios\Tailor\Support;
 
 use Illuminate\Filesystem\Filesystem;
@@ -49,7 +48,7 @@ class LivewireWorkbenchRefresher
 
     protected function makeTemporaryPath(): string
     {
-        $temporaryPath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tailor-livewire-workbench-'.bin2hex(random_bytes(8));
+        $temporaryPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'tailor-livewire-workbench-' . bin2hex(random_bytes(8));
 
         $this->files->ensureDirectoryExists($temporaryPath);
 
@@ -58,8 +57,8 @@ class LivewireWorkbenchRefresher
 
     protected function generateStarterKit(string $temporaryPath): string
     {
-        $starterKitPath = $temporaryPath.DIRECTORY_SEPARATOR.'starter-kit';
-        $laravelBinary = (new ExecutableFinder)->find('laravel');
+        $starterKitPath = $temporaryPath . DIRECTORY_SEPARATOR . 'starter-kit';
+        $laravelBinary  = (new ExecutableFinder)->find('laravel');
 
         if ($laravelBinary !== null) {
             $this->runProcess([
@@ -93,6 +92,9 @@ class LivewireWorkbenchRefresher
         return $starterKitPath;
     }
 
+    /**
+     * @param  list<string>  $command
+     */
     protected function runProcess(array $command): void
     {
         $process = new Process($command, dirname(__DIR__, 2));
@@ -104,7 +106,7 @@ class LivewireWorkbenchRefresher
         }
 
         $errorOutput = trim($process->getErrorOutput());
-        $output = trim($process->getOutput());
+        $output      = trim($process->getOutput());
 
         throw new RuntimeException($errorOutput !== '' ? $errorOutput : $output);
     }
@@ -118,7 +120,7 @@ class LivewireWorkbenchRefresher
         }
 
         foreach (['composer.json', 'bootstrap/app.php', 'routes/web.php'] as $requiredFile) {
-            if (! $this->files->isFile($resolvedPath.DIRECTORY_SEPARATOR.$requiredFile)) {
+            if (! $this->files->isFile($resolvedPath . DIRECTORY_SEPARATOR . $requiredFile)) {
                 throw new InvalidArgumentException("The provided starter kit source is missing [{$requiredFile}].");
             }
         }
@@ -151,7 +153,7 @@ class LivewireWorkbenchRefresher
                 continue;
             }
 
-            $this->files->ensureDirectoryExists($workbenchPath.DIRECTORY_SEPARATOR.$relativePath);
+            $this->files->ensureDirectoryExists($workbenchPath . DIRECTORY_SEPARATOR . $relativePath);
         }
 
         $files = Finder::create()
@@ -168,7 +170,7 @@ class LivewireWorkbenchRefresher
                 continue;
             }
 
-            $targetPath = $workbenchPath.DIRECTORY_SEPARATOR.$relativePath;
+            $targetPath = $workbenchPath . DIRECTORY_SEPARATOR . $relativePath;
 
             $this->files->ensureDirectoryExists(dirname($targetPath));
             $this->files->copy($file->getRealPath(), $targetPath);
@@ -188,7 +190,7 @@ class LivewireWorkbenchRefresher
 
     protected function ensureTestbenchProviders(string $workbenchPath): void
     {
-        $providersPath = $workbenchPath.DIRECTORY_SEPARATOR.'bootstrap/providers.php';
+        $providersPath = $workbenchPath . DIRECTORY_SEPARATOR . 'bootstrap/providers.php';
 
         if (! $this->files->isFile($providersPath)) {
             return;
