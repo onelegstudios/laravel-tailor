@@ -26,7 +26,22 @@ _ide_helper_models.php
 
 #AI
 /.ai
+/boost.json
 /AGENTS.md
+/CLAUDE.md
+/GEMINI.md
+/.mcp.json
+/.cursor/mcp.json
+/.cursor/skills
+/.claude/skills
+/.junie/mcp/mcp.json
+/.junie/skills
+/.codex/config.toml
+/opencode.json
+/.github/skills
+/.agents/skills
+/.gemini/settings.json
+/.amp/settings.json
 
 # Misc
 phpunit.xml
