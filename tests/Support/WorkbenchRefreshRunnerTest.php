@@ -3,11 +3,20 @@
 namespace Onelegstudios\Tailor\Tests\Support;
 
 use Illuminate\Filesystem\Filesystem;
+use Onelegstudios\Tailor\Support\LivewireWorkbenchRefresher;
 use Onelegstudios\Tailor\Support\WorkbenchRefreshRunner;
 use PHPUnit\Framework\TestCase;
 
 class WorkbenchRefreshRunnerTest extends TestCase
 {
+    public function test_it_defaults_the_refresher_when_none_is_provided(): void
+    {
+        $runner = new class(new Filesystem) extends WorkbenchRefreshRunner {};
+        $refresher = (new \ReflectionProperty(WorkbenchRefreshRunner::class, 'refresher'))->getValue($runner);
+
+        self::assertInstanceOf(LivewireWorkbenchRefresher::class, $refresher);
+    }
+
     public function test_it_skips_refresh_when_the_project_is_not_a_git_checkout(): void
     {
         $projectRoot = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tailor-runner-no-git-'.bin2hex(random_bytes(8));

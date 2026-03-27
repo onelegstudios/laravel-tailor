@@ -9,11 +9,13 @@ use Throwable;
 
 class WorkbenchRefreshRunner
 {
+    protected LivewireWorkbenchRefresher $refresher;
+
     public function __construct(
         protected Filesystem $files,
-        protected ?LivewireWorkbenchRefresher $refresher = null,
+        ?LivewireWorkbenchRefresher $refresher = null,
     ) {
-        $this->refresher ??= new LivewireWorkbenchRefresher($this->files);
+        $this->refresher = $refresher ?? new LivewireWorkbenchRefresher($this->files);
     }
 
     public function run(string $projectRoot): int
