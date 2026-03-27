@@ -28,9 +28,6 @@ _ide_helper_models.php
 /.ai
 /AGENTS.md
 
-# Testbench Workbench
-/workbench
-
 # Misc
 phpunit.xml
 phpstan.neon
