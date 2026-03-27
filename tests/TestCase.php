@@ -13,15 +13,19 @@ class TestCase extends Orchestra
     {
         parent::setUp();
 
-        Factory::guessFactoryNamesUsing(
-            static function ($modelName) {
-                /** @var class-string<Model> $modelName */
-                /** @var class-string<Factory<Model>> $factoryName */
-                $factoryName = 'Onelegstudios\\Tailor\\Database\\Factories\\'.class_basename($modelName).'Factory';
+        Factory::guessFactoryNamesUsing(self::resolveFactoryName(...));
+    }
 
-                return $factoryName;
-            }
-        );
+    /**
+     * @param  class-string<Model>  $modelName
+     * @return class-string<Factory<Model>>
+     */
+    private static function resolveFactoryName(string $modelName): string
+    {
+        /** @var class-string<Factory<Model>> $factoryName */
+        $factoryName = 'Onelegstudios\\Tailor\\Database\\Factories\\'.class_basename($modelName).'Factory';
+
+        return $factoryName;
     }
 
     protected function getPackageProviders($app)
