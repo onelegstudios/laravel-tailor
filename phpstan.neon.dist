@@ -13,4 +13,4 @@ parameters:
     ignoreErrors:
         -
             message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall::expect\(\)\.$#'
-            path: tests/ArchTest.php
+            path: tests/Unit/ArchTest.php

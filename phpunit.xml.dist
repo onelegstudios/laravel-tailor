@@ -16,8 +16,11 @@
     backupStaticProperties="false"
 >
     <testsuites>
-        <testsuite name="Onelegstudios Test Suite">
-            <directory>tests</directory>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
         </testsuite>
     </testsuites>
     <logging>
