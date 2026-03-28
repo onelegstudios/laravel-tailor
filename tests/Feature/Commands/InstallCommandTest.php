@@ -12,13 +12,10 @@ it('dispatches the selected feature commands', function (): void {
 
     $command->expectsChoice(
         'Which starter kit features would you like to tailor?',
-        ['authentication', 'billing'],
+        ['useLucideIcons'],
         InstallFeature::options(),
     )
-        ->expectsOutput('Configured the dummy authentication feature.')
-        ->expectsOutput('Configured the dummy billing feature.')
-        ->doesntExpectOutput('Configured the dummy API feature.')
-        ->doesntExpectOutput('Configured the dummy teams feature.')
+        ->expectsOutput('Configured Lucide icons.')
         ->expectsOutput('Tailor install complete.')
         ->assertExitCode(0);
 });
