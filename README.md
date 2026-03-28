@@ -1,9 +1,13 @@
 # Laravel Tailor
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/onelegstudios/laravel-tailor.svg)](https://packagist.org/packages/onelegstudios/laravel-tailor)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/onelegstudios/laravel-tailor/run-tests.yml?branch=main&label=tests)](https://github.com/onelegstudios/laravel-tailor/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/onelegstudios/laravel-tailor/fix-php-code-style-issues.yml?branch=main&label=code%20style)](https://github.com/onelegstudios/laravel-tailor/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/onelegstudios/laravel-tailor.svg)](https://packagist.org/packages/onelegstudios/laravel-tailor)
+[![Release](https://img.shields.io/packagist/v/onelegstudios/laravel-tailor.svg?label=release&color=18181B)](https://packagist.org/packages/onelegstudios/laravel-tailor)
+[![PHP 8.3+](https://img.shields.io/packagist/php-v/onelegstudios/laravel-tailor?label=PHP&color=777BB4)](https://packagist.org/packages/onelegstudios/laravel-tailor)
+[![Laravel 13](https://img.shields.io/badge/Laravel-13.x-FF2D20)](https://laravel.com)
+[![Livewire 4](https://img.shields.io/badge/Livewire-4.x-FB70A9)](https://livewire.laravel.com)
+[![Support](https://img.shields.io/badge/Support-Livewire%20Starter%20Kit-0F766E)](https://github.com/onelegstudios/laravel-tailor)
+[![Tests](https://img.shields.io/github/actions/workflow/status/onelegstudios/laravel-tailor/run-tests.yml?branch=main&label=tests&color=16A34A)](https://github.com/onelegstudios/laravel-tailor/actions?query=workflow%3Arun-tests+branch%3Amain)
+[![Style](https://img.shields.io/github/actions/workflow/status/onelegstudios/laravel-tailor/fix-php-code-style-issues.yml?branch=main&label=style&color=F59E0B)](https://github.com/onelegstudios/laravel-tailor/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
+[![Downloads](https://img.shields.io/packagist/dt/onelegstudios/laravel-tailor.svg?label=downloads&color=6B7280)](https://packagist.org/packages/onelegstudios/laravel-tailor)
 
 The artisan tool to customize your Laravel starter kits. Seamlessly transform fresh Livewire installations with curated modifications, architectural tweaks, and optional features. Your foundation, tailored to your workflow.
 
