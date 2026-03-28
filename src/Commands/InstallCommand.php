@@ -19,7 +19,6 @@ class InstallCommand extends Command
             label: 'Which starter kit features would you like to tailor?',
             options: InstallFeature::options(),
             default: InstallFeature::values(),
-            hint: 'These are dummy feature selections for now.',
         );
 
         if ($selectedFeatures === []) {
