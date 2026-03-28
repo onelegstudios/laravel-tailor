@@ -32,7 +32,7 @@ You will be prompted to select which modifications to apply, such as:
 If you are developing or contributing to this package, you can refresh the local Testbench workbench with:
 
 ```bash
-composer workbench:refresh
+php bin/refresh-workbench
 ```
 
 This command is for package development only. It regenerates the local `workbench/` application from the latest Livewire starter kit and rebuilds the Testbench workbench used to develop and test Laravel Tailor.
