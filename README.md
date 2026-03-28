@@ -20,24 +20,12 @@ composer require your-vendor/laravel-tailor --dev
 After requiring this package in your Laravel application and installing a Laravel starter kit, run the tailor command to apply your preferred modifications:
 
 ```php
-php artisan tailor:stitch
+php artisan tailor:install
 ```
 
 You will be prompted to select which modifications to apply, such as:
 
 - Add features here
-
-## Package Development
-
-If you are developing or contributing to this package, you can refresh the local Testbench workbench with:
-
-```bash
-php bin/refresh-workbench
-```
-
-This command is for package development only. It regenerates the local `workbench/` application from the latest Livewire starter kit and rebuilds the Testbench workbench used to develop and test Laravel Tailor.
-
-Do not run this when installing Laravel Tailor in your own application. Package consumers only need to install the package and run `php artisan tailor:stitch` inside their Laravel project.
 
 ## Why Tailor?
 
@@ -51,7 +39,19 @@ Standard starter kits are great, but they often require 30 minutes of "massaging
 
 Currently supports the Livewire Starter Kit. Support for Breeze and Jetstream is coming soon.
 
-## Testing
+## Package Development
+
+If you are developing or contributing to this package, you can refresh the local Testbench workbench with:
+
+```bash
+php bin/refresh-workbench
+```
+
+This command is for package development only. It regenerates the local `workbench/` application from the latest Livewire starter kit and rebuilds the Testbench workbench used to develop and test Laravel Tailor.
+
+Do not run this when installing Laravel Tailor in your own application. Package consumers only need to install the package and run `php artisan tailor:install` inside their Laravel project.
+
+### Testing
 
 ```bash
 composer test
