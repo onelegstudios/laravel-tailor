@@ -59,7 +59,7 @@ class LivewireWorkbenchRefresher
     protected function generateStarterKit(string $temporaryPath): string
     {
         $starterKitPath = $temporaryPath.DIRECTORY_SEPARATOR.'starter-kit';
-        $laravelBinary = (new ExecutableFinder)->find('laravel');
+        $laravelBinary = $this->resolveLaravelBinary();
 
         if ($laravelBinary !== null) {
             $this->runProcess([
@@ -67,6 +67,7 @@ class LivewireWorkbenchRefresher
                 'new',
                 $starterKitPath,
                 '--livewire',
+                '--teams',
                 '--no-interaction',
                 '--quiet',
             ]);
@@ -74,7 +75,7 @@ class LivewireWorkbenchRefresher
             return $starterKitPath;
         }
 
-        $composerBinary = (new ExecutableFinder)->find('composer');
+        $composerBinary = $this->resolveComposerBinary();
 
         if ($composerBinary === null) {
             throw new RuntimeException('Neither the Laravel installer nor Composer could be found on PATH.');
@@ -91,6 +92,16 @@ class LivewireWorkbenchRefresher
         ]);
 
         return $starterKitPath;
+    }
+
+    protected function resolveLaravelBinary(): ?string
+    {
+        return (new ExecutableFinder)->find('laravel');
+    }
+
+    protected function resolveComposerBinary(): ?string
+    {
+        return (new ExecutableFinder)->find('composer');
     }
 
     /**

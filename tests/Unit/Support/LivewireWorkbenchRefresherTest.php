@@ -5,6 +5,42 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Onelegstudios\Tailor\Support\LivewireWorkbenchRefresher;
 
+final class LivewireWorkbenchRefresherCommandHarness extends LivewireWorkbenchRefresher
+{
+    /**
+     * @var list<list<string>>
+     */
+    public array $commands = [];
+
+    public function __construct(
+        Filesystem $files,
+        protected ?string $laravelBinary = null,
+        protected ?string $composerBinary = null,
+    ) {
+        parent::__construct($files);
+    }
+
+    public function generateStarterKitForTest(string $temporaryPath): string
+    {
+        return $this->generateStarterKit($temporaryPath);
+    }
+
+    protected function resolveLaravelBinary(): ?string
+    {
+        return $this->laravelBinary;
+    }
+
+    protected function resolveComposerBinary(): ?string
+    {
+        return $this->composerBinary;
+    }
+
+    protected function runProcess(array $command): void
+    {
+        $this->commands[] = $command;
+    }
+}
+
 it('refreshes a workbench target from a provided livewire starter kit source', function (): void {
     $sandboxPath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tailor-refresh-workbench-'.Str::uuid();
     $sourcePath = $sandboxPath.DIRECTORY_SEPARATOR.'source';
@@ -59,6 +95,26 @@ JSON);
     } finally {
         File::deleteDirectory($sandboxPath);
     }
+});
+
+it('generates the starter kit with team support when the Laravel installer is available', function (): void {
+    $temporaryPath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tailor-refresh-workbench-'.Str::uuid();
+    $starterKitPath = $temporaryPath.DIRECTORY_SEPARATOR.'starter-kit';
+    $refresher = new LivewireWorkbenchRefresherCommandHarness(
+        new Filesystem,
+        laravelBinary: 'laravel',
+    );
+
+    expect($refresher->generateStarterKitForTest($temporaryPath))->toBe($starterKitPath);
+    expect($refresher->commands)->toBe([[
+        'laravel',
+        'new',
+        $starterKitPath,
+        '--livewire',
+        '--teams',
+        '--no-interaction',
+        '--quiet',
+    ]]);
 });
 
 it('fails when the provided source path is invalid', function (): void {
