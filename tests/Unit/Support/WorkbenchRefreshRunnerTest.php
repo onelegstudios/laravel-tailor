@@ -5,15 +5,16 @@ use Onelegstudios\Tailor\Support\LivewireWorkbenchRefresher;
 use Onelegstudios\Tailor\Support\WorkbenchRefreshRunner;
 
 it('defaults the refresher when none is provided', function (): void {
-    $runner = new class(new Filesystem) extends WorkbenchRefreshRunner {};
+    $runner    = new class(new Filesystem) extends WorkbenchRefreshRunner
+    {};
     $refresher = (new ReflectionProperty(WorkbenchRefreshRunner::class, 'refresher'))->getValue($runner);
 
     expect($refresher)->toBeInstanceOf(LivewireWorkbenchRefresher::class);
 });
 
 it('skips refresh when the project is not a git checkout', function (): void {
-    $projectRoot = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tailor-runner-no-git-'.bin2hex(random_bytes(8));
-    $runner = new class(new Filesystem) extends WorkbenchRefreshRunner
+    $projectRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'tailor-runner-no-git-' . bin2hex(random_bytes(8));
+    $runner      = new class(new Filesystem) extends WorkbenchRefreshRunner
     {
         public bool $refreshed = false;
 
@@ -42,8 +43,8 @@ it('skips refresh when the project is not a git checkout', function (): void {
 });
 
 it('refreshes and builds when the project is a git checkout', function (): void {
-    $projectRoot = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tailor-runner-git-'.bin2hex(random_bytes(8));
-    $runner = new class(new Filesystem) extends WorkbenchRefreshRunner
+    $projectRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'tailor-runner-git-' . bin2hex(random_bytes(8));
+    $runner      = new class(new Filesystem) extends WorkbenchRefreshRunner
     {
         public bool $refreshed = false;
 
@@ -61,7 +62,7 @@ it('refreshes and builds when the project is a git checkout', function (): void 
     };
 
     try {
-        mkdir($projectRoot.DIRECTORY_SEPARATOR.'.git', 0777, true);
+        mkdir($projectRoot . DIRECTORY_SEPARATOR . '.git', 0777, true);
 
         expect($runner->run($projectRoot))->toBe(0);
         expect($runner->refreshed)->toBeTrue();
@@ -69,4 +70,39 @@ it('refreshes and builds when the project is a git checkout', function (): void 
     } finally {
         (new Filesystem)->deleteDirectory($projectRoot);
     }
+});
+
+it('builds the testbench skeleton before installing and building frontend assets', function (): void {
+    /** @var object{performBuild: callable(string): void, steps: list<string>} $runner */
+    $runner = new class(new Filesystem) extends WorkbenchRefreshRunner
+    {
+        /**
+         * @var list<string>
+         */
+        public array $steps = [];
+
+        public function performBuild(string $projectRoot): void
+        {
+            $this->buildWorkbench($projectRoot);
+        }
+
+        protected function buildWorkbenchSkeleton(string $projectRoot): void
+        {
+            $this->steps[] = 'skeleton';
+        }
+
+        protected function installWorkbenchDependencies(string $projectRoot): void
+        {
+            $this->steps[] = 'install';
+        }
+
+        protected function buildWorkbenchAssets(string $projectRoot): void
+        {
+            $this->steps[] = 'assets';
+        }
+    };
+
+    $runner->performBuild(__DIR__);
+
+    expect($runner->steps)->toBe(['skeleton', 'install', 'assets']);
 });

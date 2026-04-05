@@ -51,7 +51,7 @@ If you are developing or contributing to this package, you can refresh the local
 php bin/refresh-workbench
 ```
 
-This command is for package development only. It regenerates the local `workbench/` application from the latest Livewire starter kit and rebuilds the Testbench workbench used to develop and test Laravel Tailor.
+This command is for package development only. It regenerates the local `workbench/` application from the latest Livewire starter kit, rebuilds the Testbench workbench, reinstalls the workbench frontend dependencies, and builds the Vite manifest used by `testbench serve`.
 
 Do not run this when installing Laravel Tailor in your own application. Package consumers only need to install the package and run `php artisan tailor:install` inside their Laravel project.
 
