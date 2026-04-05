@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "**.php"
+      - "testbench.yaml"
       - ".github/workflows/run-tests.yml"
       - "phpunit.xml.dist"
       - "composer.json"
@@ -13,6 +14,7 @@ on:
   pull_request:
     paths:
       - "**.php"
+      - "testbench.yaml"
       - ".github/workflows/run-tests.yml"
       - "phpunit.xml.dist"
       - "composer.json"
