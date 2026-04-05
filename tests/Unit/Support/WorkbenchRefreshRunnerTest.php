@@ -4,31 +4,6 @@ use Illuminate\Filesystem\Filesystem;
 use Onelegstudios\Tailor\Support\LivewireWorkbenchRefresher;
 use Onelegstudios\Tailor\Support\WorkbenchRefreshRunner;
 
-final class WorkbenchRefreshRunnerBuildHarness extends WorkbenchRefreshRunner
-{
-    public array $steps = [];
-
-    public function performBuild(string $projectRoot): void
-    {
-        $this->buildWorkbench($projectRoot);
-    }
-
-    protected function buildWorkbenchSkeleton(string $projectRoot): void
-    {
-        $this->steps[] = 'skeleton';
-    }
-
-    protected function installWorkbenchDependencies(string $projectRoot): void
-    {
-        $this->steps[] = 'install';
-    }
-
-    protected function buildWorkbenchAssets(string $projectRoot): void
-    {
-        $this->steps[] = 'assets';
-    }
-}
-
 it('defaults the refresher when none is provided', function (): void {
     $runner = new class(new Filesystem) extends WorkbenchRefreshRunner {};
     $refresher = (new ReflectionProperty(WorkbenchRefreshRunner::class, 'refresher'))->getValue($runner);
@@ -97,9 +72,27 @@ it('refreshes and builds when the project is a git checkout', function (): void 
 });
 
 it('builds the testbench skeleton before installing and building frontend assets', function (): void {
-    $runner = new WorkbenchRefreshRunnerBuildHarness(new Filesystem);
+    $runner = new class(new Filesystem) extends WorkbenchRefreshRunner
+    {
+        public array $steps = [];
 
-    $runner->performBuild(__DIR__);
+        protected function buildWorkbenchSkeleton(string $projectRoot): void
+        {
+            $this->steps[] = 'skeleton';
+        }
+
+        protected function installWorkbenchDependencies(string $projectRoot): void
+        {
+            $this->steps[] = 'install';
+        }
+
+        protected function buildWorkbenchAssets(string $projectRoot): void
+        {
+            $this->steps[] = 'assets';
+        }
+    };
+
+    (new ReflectionMethod(WorkbenchRefreshRunner::class, 'buildWorkbench'))->invoke($runner, __DIR__);
 
     expect($runner->steps)->toBe(['skeleton', 'install', 'assets']);
 });
