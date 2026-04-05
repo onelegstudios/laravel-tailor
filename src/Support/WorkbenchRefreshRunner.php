@@ -1,4 +1,5 @@
 <?php
+
 namespace Onelegstudios\Tailor\Support;
 
 use Illuminate\Filesystem\Filesystem;
@@ -20,7 +21,7 @@ class WorkbenchRefreshRunner
 
     public function run(string $projectRoot): int
     {
-        if (! $this->files->isDirectory($projectRoot . DIRECTORY_SEPARATOR . '.git')) {
+        if (! $this->files->isDirectory($projectRoot.DIRECTORY_SEPARATOR.'.git')) {
             fwrite(STDOUT, "Skipping workbench refresh outside a git checkout.\n");
 
             return 0;
@@ -32,7 +33,7 @@ class WorkbenchRefreshRunner
             $this->refreshWorkbench($projectRoot);
             $this->buildWorkbench($projectRoot);
         } catch (Throwable $throwable) {
-            fwrite(STDERR, $throwable->getMessage() . "\n");
+            fwrite(STDERR, $throwable->getMessage()."\n");
 
             return 1;
         }
@@ -44,7 +45,7 @@ class WorkbenchRefreshRunner
 
     protected function refreshWorkbench(string $projectRoot): void
     {
-        $this->refresher->refresh($projectRoot . DIRECTORY_SEPARATOR . 'workbench');
+        $this->refresher->refresh($projectRoot.DIRECTORY_SEPARATOR.'workbench');
     }
 
     protected function buildWorkbench(string $projectRoot): void
@@ -71,19 +72,19 @@ class WorkbenchRefreshRunner
         }
 
         $errorOutput = trim($process->getErrorOutput());
-        $output      = trim($process->getOutput());
+        $output = trim($process->getOutput());
 
         throw new RuntimeException($errorOutput !== '' ? $errorOutput : $output);
     }
 
     protected function installWorkbenchDependencies(string $projectRoot): void
     {
-        if (! $this->files->isFile($projectRoot . DIRECTORY_SEPARATOR . 'workbench' . DIRECTORY_SEPARATOR . 'package.json')) {
+        if (! $this->files->isFile($projectRoot.DIRECTORY_SEPARATOR.'workbench'.DIRECTORY_SEPARATOR.'package.json')) {
             return;
         }
 
         $this->runWorkbenchProcess($projectRoot, [
-             ...$this->resolveNpmCommand(),
+            ...$this->resolveNpmCommand(),
             'install',
             '--no-audit',
             '--no-fund',
@@ -93,12 +94,12 @@ class WorkbenchRefreshRunner
 
     protected function buildWorkbenchAssets(string $projectRoot): void
     {
-        if (! $this->files->isFile($projectRoot . DIRECTORY_SEPARATOR . 'workbench' . DIRECTORY_SEPARATOR . 'package.json')) {
+        if (! $this->files->isFile($projectRoot.DIRECTORY_SEPARATOR.'workbench'.DIRECTORY_SEPARATOR.'package.json')) {
             return;
         }
 
         $this->runWorkbenchProcess($projectRoot, [
-             ...$this->resolveNpmCommand(),
+            ...$this->resolveNpmCommand(),
             'run',
             'build',
         ]);
@@ -123,7 +124,7 @@ class WorkbenchRefreshRunner
      */
     protected function runWorkbenchProcess(string $projectRoot, array $command): void
     {
-        $process = new Process($command, $projectRoot . DIRECTORY_SEPARATOR . 'workbench');
+        $process = new Process($command, $projectRoot.DIRECTORY_SEPARATOR.'workbench');
         $process->setTimeout(null);
         $process->run();
 
@@ -132,7 +133,7 @@ class WorkbenchRefreshRunner
         }
 
         $errorOutput = trim($process->getErrorOutput());
-        $output      = trim($process->getOutput());
+        $output = trim($process->getOutput());
 
         throw new RuntimeException($errorOutput !== '' ? $errorOutput : $output);
     }
