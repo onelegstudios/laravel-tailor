@@ -3,7 +3,6 @@
 namespace Onelegstudios\Tailor\Tests;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Database\Eloquent\Model;
 use Onelegstudios\Tailor\TailorServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
@@ -16,16 +15,9 @@ class TestCase extends Orchestra
         Factory::guessFactoryNamesUsing(self::resolveFactoryName(...));
     }
 
-    /**
-     * @param  class-string<Model>  $modelName
-     * @return class-string<Factory<Model>>
-     */
     private static function resolveFactoryName(string $modelName): string
     {
-        /** @var class-string<Factory<Model>> $factoryName */
-        $factoryName = 'Onelegstudios\\Tailor\\Database\\Factories\\'.class_basename($modelName).'Factory';
-
-        return $factoryName;
+        return 'Onelegstudios\\Tailor\\Database\\Factories\\'.class_basename($modelName).'Factory';
     }
 
     protected function getPackageProviders($app)

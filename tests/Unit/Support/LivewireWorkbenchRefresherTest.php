@@ -7,9 +7,6 @@ use Onelegstudios\Tailor\Support\LivewireWorkbenchRefresher;
 
 final class LivewireWorkbenchRefresherCommandHarness extends LivewireWorkbenchRefresher
 {
-    /**
-     * @var list<list<string>>
-     */
     public array $commands = [];
 
     public function __construct(

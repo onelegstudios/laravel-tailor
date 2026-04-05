@@ -57,7 +57,10 @@
             "@prepare"
         ],
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
-        "analyse": "vendor/bin/phpstan analyse --memory-limit=2G",
+        "analyse": [
+            "vendor/bin/phpstan analyse --memory-limit=2G",
+            "vendor/bin/phpstan analyse -c phpstan-test.neon.dist --memory-limit=2G"
+        ],
         "test": "vendor/bin/pest -p",
         "test-coverage": "vendor/bin/pest --coverage",
         "format": "vendor/bin/pint",
