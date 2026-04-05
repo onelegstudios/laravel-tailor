@@ -1,16 +1,11 @@
 <?php
 
-use Illuminate\Testing\PendingCommand;
 use Onelegstudios\Tailor\Enums\InstallFeature;
 
 use function Pest\Laravel\artisan;
 
 it('dispatches the selected feature commands', function (): void {
-    $command = artisan('tailor:install');
-
-    assert($command instanceof PendingCommand);
-
-    $command->expectsChoice(
+    artisan('tailor:install')->expectsChoice(
         'Which starter kit features would you like to tailor?',
         ['useLucideIcons'],
         InstallFeature::options(),
@@ -21,11 +16,7 @@ it('dispatches the selected feature commands', function (): void {
 });
 
 it('exits cleanly when no features are selected', function (): void {
-    $command = artisan('tailor:install');
-
-    assert($command instanceof PendingCommand);
-
-    $command->expectsChoice(
+    artisan('tailor:install')->expectsChoice(
         'Which starter kit features would you like to tailor?',
         [],
         InstallFeature::options(),

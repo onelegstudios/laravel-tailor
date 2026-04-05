@@ -6,9 +6,6 @@ use Onelegstudios\Tailor\Support\WorkbenchRefreshRunner;
 
 final class WorkbenchRefreshRunnerBuildHarness extends WorkbenchRefreshRunner
 {
-    /**
-     * @var list<string>
-     */
     public array $steps = [];
 
     public function performBuild(string $projectRoot): void
