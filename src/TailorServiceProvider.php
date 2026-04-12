@@ -33,6 +33,6 @@ class TailorServiceProvider extends PackageServiceProvider
             return;
         }
 
-        Livewire::addNamespace('tailor-pages', dirname(__DIR__).'/resources/views/pages');
+        Livewire::addNamespace('tailor', dirname(__DIR__).'/resources/views');
     }
 }

@@ -28,7 +28,7 @@ test('dev landing page redirects to the package icon map page', function (): voi
 });
 
 test('icon map page component renders icon mappings', function (): void {
-    Livewire::test('tailor-pages::dev.icon-map')
+    Livewire::test('tailor::pages.dev.icon-map')
         ->assertSee('Icon Set Comparison')
         ->assertSee('arrow-path')
         ->assertSee('refresh-cw')
@@ -43,7 +43,7 @@ test('icon map page component uses runtime config mappings', function (): void {
         ],
     ]);
 
-    Livewire::test('tailor-pages::dev.icon-map')
+    Livewire::test('tailor::pages.dev.icon-map')
         ->assertSee('arrow-path')
         ->assertSee('from-config-repository')
         ->assertSee('data-lucide="from-config-repository"', false)
@@ -59,7 +59,7 @@ test('icon map page sorts icon mappings alphabetically by key', function (): voi
         ],
     ]);
 
-    Livewire::test('tailor-pages::dev.icon-map')
+    Livewire::test('tailor::pages.dev.icon-map')
         ->assertSet('icons.0.key', 'book-open-text')
         ->assertSet('icons.1.key', 'check')
         ->assertSet('icons.2.key', 'cog');
