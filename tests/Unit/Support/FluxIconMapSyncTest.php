@@ -205,27 +205,28 @@ BLADE);
         $writtenConfig = require $configPath;
         $writtenContents = $filesystem->get($configPath);
 
-        expect($writtenContents)->toContain("'bars-2' => null")
-            ->not->toContain("'new' =>")
-            ->not->toContain('NULL')
-            ->and($secondRun['new'])->toBe([
-                'bars-2',
-                'exclamation-triangle',
-                'loading',
-            ])->and($writtenConfig)->toBe([
-                'icons' => [
-                    'mappings' => [
-                        'bars-2' => null,
-                        'chevron-down' => 'chevron-right',
-                        'exclamation-triangle' => null,
-                        'loading' => null,
-                        'plus' => 'circle-plus',
-                    ],
-                    'removed' => [
-                        'chevron-down' => 'chevron-right',
-                    ],
+        expect($writtenContents)->toContain("'bars-2' => null");
+        expect($writtenContents)->not->toContain("'new' =>");
+        expect($writtenContents)->not->toContain('NULL');
+
+        expect($secondRun['new'])->toBe([
+            'bars-2',
+            'exclamation-triangle',
+            'loading',
+        ])->and($writtenConfig)->toBe([
+            'icons' => [
+                'mappings' => [
+                    'bars-2' => null,
+                    'chevron-down' => 'chevron-right',
+                    'exclamation-triangle' => null,
+                    'loading' => null,
+                    'plus' => 'circle-plus',
                 ],
-            ]);
+                'removed' => [
+                    'chevron-down' => 'chevron-right',
+                ],
+            ],
+        ]);
     } finally {
         $filesystem->deleteDirectory($root);
     }
@@ -271,7 +272,9 @@ BLADE);
                     'plus' => null,
                 ],
             ],
-        ])->and($writtenContents)->not->toContain("'removed' =>");
+        ]);
+
+        expect($writtenContents)->not->toContain("'removed' =>");
     } finally {
         $filesystem->deleteDirectory($root);
     }

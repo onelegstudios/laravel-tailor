@@ -20,7 +20,7 @@ class UseLucideIcons
 
     /**
      * @param  array<mixed>  $mappings
-     * @param  callable(list<string>): int|bool|null  $publisher
+     * @param  callable(list<string>): (int|bool|null)  $publisher
      * @return array{filesUpdated: list<string>, iconsPublished: list<string>, warnings: list<string>}
      */
     public function handle(string $viewsRoot, string $iconRoot, array $mappings, callable $publisher): array
@@ -126,7 +126,7 @@ class UseLucideIcons
 
     /**
      * @param  list<string>  $icons
-     * @param  callable(list<string>): int|bool|null  $publisher
+     * @param  callable(list<string>): (int|bool|null)  $publisher
      */
     private function publishIcons(array $icons, callable $publisher): void
     {
@@ -181,11 +181,10 @@ class UseLucideIcons
             }
         }
 
-        return collect($iconsToPublish)
+        return array_values(collect($iconsToPublish)
             ->unique()
             ->sort()
-            ->values()
-            ->all();
+            ->all());
     }
 
     /**

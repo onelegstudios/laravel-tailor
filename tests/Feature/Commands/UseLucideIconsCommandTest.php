@@ -1,5 +1,6 @@
 <?php
 
+use Mockery\Expectation;
 use Mockery\MockInterface;
 use Onelegstudios\Tailor\Support\UseLucideIcons;
 
@@ -8,13 +9,15 @@ use function Pest\Laravel\mock;
 
 it('delegates to the lucide icon action', function (): void {
     mock(UseLucideIcons::class, function (MockInterface $mock): void {
-        $mock->shouldReceive('handle')
+        /** @var Expectation $handleExpectation */
+        $handleExpectation = $mock->shouldReceive('handle');
+
+        $handleExpectation
             ->once()
             ->withArgs(function (string $viewsRoot, string $iconRoot, array $mappings, callable $publisher): bool {
                 expect($viewsRoot)->toBe(resource_path('views'))
                     ->and($iconRoot)->toBe(resource_path('views/flux/icon'))
-                    ->and($mappings)->toBe(config('tailor.icons.mappings'))
-                    ->and(is_callable($publisher))->toBeTrue();
+                    ->and($mappings)->toBe(config('tailor.icons.mappings'));
 
                 return true;
             })

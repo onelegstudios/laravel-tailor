@@ -37,12 +37,11 @@ class FluxBladeIconProcessor
         }
 
         return [
-            'icons' => collect($icons)
+            'icons' => array_values(collect($icons)
                 ->filter()
                 ->unique()
                 ->sort()
-                ->values()
-                ->all(),
+                ->all()),
             'warnings' => array_values(array_unique($warnings)),
         ];
     }
@@ -55,19 +54,17 @@ class FluxBladeIconProcessor
     {
         $icons = [];
         $warnings = [];
-        $normalizedExcludedRoots = collect($excludedRoots)
+        $normalizedExcludedRoots = array_values(collect($excludedRoots)
             ->map(fn (string $path): string => $this->normalizePath($path))
             ->filter()
-            ->values()
-            ->all();
+            ->all());
 
-        $bladeFiles = collect($this->filesystem->allFiles($viewsRoot))
+        $bladeFiles = array_values(collect($this->filesystem->allFiles($viewsRoot))
             ->filter(fn (SplFileInfo $file): bool => Str::endsWith($file->getFilename(), '.blade.php'))
             ->map(fn (SplFileInfo $file): string => $file->getPathname())
             ->reject(fn (string $path): bool => $this->pathIsExcluded($path, $normalizedExcludedRoots))
             ->sort()
-            ->values()
-            ->all();
+            ->all());
 
         foreach ($bladeFiles as $path) {
             $result = $this->extractIconsFromBlade($this->filesystem->get($path), $path);
@@ -78,12 +75,11 @@ class FluxBladeIconProcessor
 
         return [
             'files' => $bladeFiles,
-            'icons' => collect($icons)
+            'icons' => array_values(collect($icons)
                 ->filter()
                 ->unique()
                 ->sort()
-                ->values()
-                ->all(),
+                ->all()),
             'warnings' => array_values(array_unique($warnings)),
         ];
     }
@@ -125,12 +121,12 @@ class FluxBladeIconProcessor
     {
         preg_match_all('/\{\{--.*?--\}\}|<!--.*?-->/s', $blade, $matches, PREG_OFFSET_CAPTURE);
 
-        return collect($matches[0] ?? [])
+        return array_values(collect($matches[0])
             ->map(fn (array $match): array => [
                 'start' => $match[1],
                 'end' => $match[1] + strlen($match[0]) - 1,
             ])
-            ->all();
+            ->all());
     }
 
     /**
@@ -199,12 +195,11 @@ class FluxBladeIconProcessor
         }
 
         return [
-            'icons' => collect($icons)
+            'icons' => array_values(collect($icons)
                 ->filter()
                 ->unique()
                 ->sort()
-                ->values()
-                ->all(),
+                ->all()),
             'warnings' => $warnings,
         ];
     }
@@ -250,11 +245,10 @@ class FluxBladeIconProcessor
             $icons[] = $icon;
         }
 
-        return collect($icons)
+        return array_values(collect($icons)
             ->unique()
             ->sort()
-            ->values()
-            ->all();
+            ->all());
     }
 
     private function findTagEnd(string $blade, int $start): ?int

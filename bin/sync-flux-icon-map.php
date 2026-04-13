@@ -98,10 +98,9 @@ final class FluxIconMapSync
 
         $mappings = self::sortMappings($mappings);
 
-        $new = collect($detected)
+        $new = array_values(collect($detected)
             ->reject(fn (string $icon): bool => array_key_exists($icon, $previousMappings))
-            ->values()
-            ->all();
+            ->all());
 
         $removed = collect($mappings)
             ->reject(fn (mixed $value, mixed $key): bool => in_array((string) $key, $detected, true))
@@ -152,7 +151,7 @@ final class FluxIconMapSync
 
     /**
      * @return array{
-     *     config: array{mappings: array<mixed>, new: array<mixed>, removed: array<mixed>},
+     *     config: array{mappings: array<mixed>, new: list<string>, removed: array<mixed>},
      *     iconRootConfig: array<mixed>,
      *     rootConfig: array<mixed>,
      *     wasWrapped: bool
@@ -223,13 +222,13 @@ final class FluxIconMapSync
 
     /**
      * @param  array<mixed>  $config
-     * @return array{mappings: array<mixed>, new: array<mixed>, removed: array<mixed>}
+     * @return array{mappings: array<mixed>, new: list<string>, removed: array<mixed>}
      */
     private static function normalizeConfig(array $config): array
     {
         return [
             'mappings' => self::sortMappings($config['mappings'] ?? []),
-            'new' => collect($config['new'] ?? [])->sort()->values()->all(),
+            'new' => self::normalizeStringList($config['new'] ?? []),
             'removed' => self::sortMappings($config['removed'] ?? []),
         ];
     }
@@ -253,12 +252,42 @@ final class FluxIconMapSync
      */
     private static function mergeRequiredIcons(array $icons): array
     {
-        return collect([...$icons, ...self::REQUIRED_ICONS])
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values()
-            ->all();
+        return self::normalizeStringList([...$icons, ...self::REQUIRED_ICONS]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function normalizeStringList(mixed $values): array
+    {
+        if (! is_array($values)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach ($values as $value) {
+            if (! is_scalar($value) && $value !== null) {
+                continue;
+            }
+
+            if ($value === null) {
+                continue;
+            }
+
+            $value = trim((string) $value);
+
+            if ($value === '') {
+                continue;
+            }
+
+            $normalized[] = $value;
+        }
+
+        $normalized = array_values(array_unique($normalized));
+        sort($normalized);
+
+        return $normalized;
     }
 
     /**

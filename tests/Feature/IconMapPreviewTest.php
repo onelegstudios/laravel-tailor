@@ -3,14 +3,17 @@
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
+use function Pest\Laravel\get;
+use function Pest\Laravel\withoutVite;
+
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    $this->withoutVite();
+    withoutVite();
 });
 
 test('guests can view the package icon map page', function (): void {
-    $this->get(route('dev.icon-map'))
+    get(route('dev.icon-map'))
         ->assertOk()
         ->assertSee('Icon Set Comparison')
         ->assertSee('Development Preview')
@@ -23,7 +26,7 @@ test('guests can view the package icon map page', function (): void {
 });
 
 test('dev landing page redirects to the package icon map page', function (): void {
-    $this->get(route('dev'))
+    get(route('dev'))
         ->assertRedirectToRoute('dev.icon-map');
 });
 
@@ -66,7 +69,7 @@ test('icon map page sorts icon mappings alphabetically by key', function (): voi
 });
 
 test('icon map page keeps the card layout through extra large screens', function (): void {
-    $this->get(route('dev.icon-map'))
+    get(route('dev.icon-map'))
         ->assertOk()
         ->assertSee('data-test="icon-map-mobile-cards"', false)
         ->assertSee('class="grid gap-4 p-4 sm:p-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:hidden"', false)
@@ -77,7 +80,7 @@ test('icon map page keeps the card layout through extra large screens', function
 });
 
 test('icon map page initializes lucide previews once per page visit', function (): void {
-    $this->get(route('dev.icon-map'))
+    get(route('dev.icon-map'))
         ->assertOk()
         ->assertSee('script data-navigate-once src="https://unpkg.com/lucide@0.511.0/dist/umd/lucide.min.js"', false)
         ->assertSee("document.addEventListener('livewire:navigated', renderTailorLucideIcons, { once: true });", false)
