@@ -1,0 +1,13 @@
+#!/usr/bin/env php
+<?php
+
+    declare(strict_types=1);
+
+use Illuminate\Filesystem\Filesystem;
+use Onelegstudios\Tailor\Support\WorkbenchRefreshRunner;
+
+require dirname(__DIR__).'/vendor/autoload.php';
+
+$runner = new WorkbenchRefreshRunner(new Filesystem);
+
+exit($runner->run(dirname(__DIR__)));

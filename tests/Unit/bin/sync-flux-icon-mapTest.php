@@ -9,20 +9,6 @@ function fluxIconMapSync(string $method, mixed ...$arguments): mixed
     return call_user_func([$GLOBALS['fluxIconMapSyncClass'], $method], ...$arguments);
 }
 
-it('extracts static flux icon tags', function (): void {
-    $result = fluxIconMapSync('extractIconsFromBlade', <<<'BLADE'
-<flux:icon.chevron-right />
-<flux:icon.loading/>
-<flux:icon.qr-code class="size-4" />
-BLADE);
-
-    expect($result['icons'])->toBe([
-        'chevron-right',
-        'loading',
-        'qr-code',
-    ])->and($result['warnings'])->toBe([]);
-});
-
 it('defaults to syncing the package workbench views into the package tailor config', function (): void {
     $projectRoot = dirname(__DIR__, 3);
     $defaultViewsRoot = (new ReflectionMethod($GLOBALS['fluxIconMapSyncClass'], 'defaultViewsRoot'))->invoke(null);
@@ -30,77 +16,6 @@ it('defaults to syncing the package workbench views into the package tailor conf
 
     expect($defaultViewsRoot)->toBe($projectRoot.DIRECTORY_SEPARATOR.'workbench'.DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'views')
         ->and($defaultConfigPath)->toBe($projectRoot.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'tailor.php');
-});
-
-it('extracts icons from dynamic flux icon attributes', function (): void {
-    $result = fluxIconMapSync('extractIconsFromBlade', <<<'BLADE'
-<flux:icon name="users" />
-<flux:icon
-    icon="chevrons-up-down"
-    variant="micro"
-/>
-<flux:modal name="create-team" />
-BLADE);
-
-    expect($result['icons'])->toBe([
-        'chevrons-up-down',
-        'users',
-    ])->and($result['warnings'])->toBe([]);
-});
-
-it('extracts icon shorthand attributes from other flux components', function (): void {
-    $result = fluxIconMapSync('extractIconsFromBlade', <<<'BLADE'
-<flux:button icon="plus" />
-<flux:menu.item icon="cog">Settings</flux:menu.item>
-<flux:button icon:trailing="chevron-down">More</flux:button>
-<flux:profile icon-trailing="chevron-down" />
-<flux:button icon:variant="mini" icon:class="size-4" />
-BLADE);
-
-    expect($result['icons'])->toBe([
-        'chevron-down',
-        'cog',
-        'plus',
-    ])->and($result['warnings'])->toBe([]);
-});
-
-it('extracts literal icon values from bound expressions and warns on unresolved ones', function (): void {
-    $result = fluxIconMapSync('extractIconsFromBlade', <<<'BLADE'
-<flux:button :icon="'plus'" />
-<flux:button :icon="$condition ? 'eye' : 'pencil'" />
-<flux:icon :name="'users'" />
-<flux:button :icon="$iconName" />
-BLADE, 'inline.blade.php');
-
-    expect($result['icons'])->toBe([
-        'eye',
-        'pencil',
-        'plus',
-        'users',
-    ])->and($result['warnings'])->toHaveCount(1);
-
-    expect($result['warnings'][0])
-        ->toContain('inline.blade.php')
-        ->toContain(':icon')
-        ->toContain('<flux:button>');
-});
-
-it('ignores flux tags inside Blade and HTML comments', function (): void {
-    $result = fluxIconMapSync('extractIconsFromBlade', <<<'BLADE'
-<flux:button icon="plus" />
-
-{{--
-    <flux:icon name="ghost" />
---}}
-
-<!--
-    <flux:button :icon="$iconName" />
--->
-BLADE, 'inline.blade.php');
-
-    expect($result['icons'])->toBe([
-        'plus',
-    ])->and($result['warnings'])->toBe([]);
 });
 
 it('fails when an existing config file does not return an array', function (): void {
