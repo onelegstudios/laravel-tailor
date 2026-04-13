@@ -153,7 +153,10 @@ it('publishes detected icons with same-name mappings', function (): void {
     $filesystem->ensureDirectoryExists($iconRoot);
 
     try {
-        $filesystem->put($viewPath, '<flux:icon.layout-grid />');
+        $filesystem->put($viewPath, <<<'BLADE'
+<flux:icon.layout-grid />
+<flux:button :icon="'layout-grid'" />
+BLADE);
 
         $publishedBatches = [];
 
@@ -183,7 +186,64 @@ it('publishes detected icons with same-name mappings', function (): void {
             ->and($summary['filesUpdated'])->toBe([])
             ->and($summary['warnings'])->toBe([])
             ->and($filesystem->exists($iconRoot.'/layout-grid.blade.php'))->toBeTrue()
-            ->and($filesystem->get($viewPath))->toBe('<flux:icon.layout-grid />');
+            ->and($filesystem->get($viewPath))->toBe(<<<'BLADE'
+<flux:icon.layout-grid />
+<flux:button :icon="'layout-grid'" />
+BLADE);
+    } finally {
+        $filesystem->deleteDirectory($root);
+    }
+});
+
+it('leaves partially mapped bound icon ternaries unchanged and warns', function (): void {
+    $filesystem = new Filesystem;
+    $action = new UseLucideIcons($filesystem, new FluxBladeIconProcessor($filesystem));
+    $root = sys_get_temp_dir().'/use-lucide-icons-'.bin2hex(random_bytes(8));
+    $viewsRoot = $root.'/views';
+    $iconRoot = $viewsRoot.'/flux/icon';
+    $viewPath = $viewsRoot.'/dashboard.blade.php';
+    $blade = <<<'BLADE'
+<flux:button :icon="$ok ? 'plus' : 'missing'" />
+BLADE;
+
+    $filesystem->ensureDirectoryExists($iconRoot);
+
+    try {
+        $filesystem->put($viewPath, $blade);
+
+        $publishedBatches = [];
+
+        $summary = $action->handle(
+            $viewsRoot,
+            $iconRoot,
+            [
+                'icons' => [
+                    'mappings' => [
+                        'plus' => 'circle-plus',
+                    ],
+                ],
+            ],
+            function (array $icons) use ($filesystem, $iconRoot, &$publishedBatches): int {
+                $publishedBatches[] = $icons;
+
+                foreach ($icons as $icon) {
+                    $filesystem->put($iconRoot.'/'.$icon.'.blade.php', lucideIconBladeStub($icon));
+                }
+
+                return 0;
+            },
+        );
+
+        expect($publishedBatches)->toBe([['circle-plus']])
+            ->and($summary['iconsPublished'])->toBe(['circle-plus'])
+            ->and($summary['filesUpdated'])->toBe([])
+            ->and($summary['warnings'])->toHaveCount(1)
+            ->and($summary['warnings'][0])->toContain($viewPath)
+            ->and($summary['warnings'][0])->toContain(':icon')
+            ->and($summary['warnings'][0])->toContain('<flux:button>')
+            ->and($filesystem->get($viewPath))->toBe($blade)
+            ->and($filesystem->exists($iconRoot.'/circle-plus.blade.php'))->toBeTrue()
+            ->and($filesystem->exists($iconRoot.'/missing.blade.php'))->toBeFalse();
     } finally {
         $filesystem->deleteDirectory($root);
     }

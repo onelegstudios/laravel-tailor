@@ -498,7 +498,7 @@ class FluxBladeIconProcessor
             $normalizedIcon = $this->normalizeIconName($icon);
             $normalizedTarget = $this->normalizeIconName($target);
 
-            if ($normalizedIcon === null || $normalizedTarget === null || $normalizedIcon === $normalizedTarget) {
+            if ($normalizedIcon === null || $normalizedTarget === null) {
                 continue;
             }
 
@@ -697,7 +697,11 @@ class FluxBladeIconProcessor
                 return null;
             }
 
-            $replacement = $mappings[$icon] ?? $icon;
+            if (! array_key_exists($icon, $mappings)) {
+                return null;
+            }
+
+            $replacement = $mappings[$icon];
             $literalValue = $literal['quote'].$replacement.$literal['quote'];
 
             $rewrittenExpression = substr($rewrittenExpression, 0, $literal['start'])
