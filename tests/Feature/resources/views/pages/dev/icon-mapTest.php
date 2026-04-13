@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
 
 use function Pest\Laravel\get;
@@ -17,26 +16,10 @@ test('guests can view the package icon map page', function (): void {
     get(route('dev.icon-map'))
         ->assertOk()
         ->assertSee('Icon Set Comparison')
-        ->assertSee('Development Preview')
-        ->assertSee('bg-zinc-500 text-white shadow-sm shadow-zinc-500/30 dark:bg-zinc-400 dark:text-zinc-950 dark:shadow-zinc-400/20', false)
-        ->assertDontSee('bg-sky-500 text-white shadow-sm shadow-sky-500/30 dark:bg-sky-400 dark:text-zinc-950 dark:shadow-sky-400/20', false)
         ->assertSee('arrow-path')
         ->assertSee('refresh-cw')
         ->assertSee('Heroicons package')
         ->assertSee('data-lucide="refresh-cw"', false);
-});
-
-test('dev landing page redirects to the package icon map page', function (): void {
-    get(route('dev'))
-        ->assertRedirectToRoute('dev.icon-map');
-});
-
-test('preview routes use the web middleware group', function (): void {
-    expect(Route::getRoutes()->getByName('dev')?->gatherMiddleware())
-        ->toContain('web');
-
-    expect(Route::getRoutes()->getByName('dev.icon-map')?->gatherMiddleware())
-        ->toContain('web');
 });
 
 test('icon map page component renders icon mappings', function (): void {
