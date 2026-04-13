@@ -41,10 +41,12 @@ class UseLucideIcons
         $warnings = [];
 
         foreach ($scan['files'] as $path) {
+            $displayPath = $this->displayPath($viewsRoot, $path);
+
             $result = $this->fluxBladeIconProcessor->rewriteBladeIcons(
                 $this->filesystem->get($path),
                 $resolvedMappings,
-                $path,
+                $displayPath,
             );
 
             $warnings = [...$warnings, ...$result['warnings']];
@@ -54,7 +56,7 @@ class UseLucideIcons
             }
 
             $this->filesystem->replace($path, $result['blade']);
-            $updatedFiles[] = $path;
+            $updatedFiles[] = $displayPath;
         }
 
         return [
@@ -78,6 +80,18 @@ class UseLucideIcons
 
         $this->filesystem->ensureDirectoryExists(dirname($legacyPath));
         $this->filesystem->replace($legacyPath, $this->filesystem->get($sourcePath));
+    }
+
+    private function displayPath(string $viewsRoot, string $path): string
+    {
+        $normalizedRoot = $this->normalizePath($viewsRoot);
+        $normalizedPath = $this->normalizePath($path);
+
+        if (! Str::startsWith($normalizedPath, $normalizedRoot.'/')) {
+            return $path;
+        }
+
+        return rtrim($viewsRoot, '/\\').'/'.Str::after($normalizedPath, $normalizedRoot.'/');
     }
 
     /**
@@ -234,5 +248,10 @@ class UseLucideIcons
         }
 
         return Str::lower($icon);
+    }
+
+    private function normalizePath(string $path): string
+    {
+        return rtrim(str_replace('\\', '/', $path), '/');
     }
 }

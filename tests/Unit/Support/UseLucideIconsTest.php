@@ -302,6 +302,17 @@ BLADE;
     }
 });
 
+it('formats reported paths from the provided views root style', function (): void {
+    $action = new UseLucideIcons(new Filesystem, new FluxBladeIconProcessor(new Filesystem));
+    $method = new ReflectionMethod($action, 'displayPath');
+
+    $viewsRoot = 'C:\\Users\\runner\\AppData\\Local\\Temp/use-lucide-icons/views';
+    $viewPath = 'C:\\Users\\runner\\AppData\\Local\\Temp\\use-lucide-icons\\views\\dashboard.blade.php';
+
+    expect($method->invoke($action, $viewsRoot, $viewPath))
+        ->toBe('C:\\Users\\runner\\AppData\\Local\\Temp/use-lucide-icons/views/dashboard.blade.php');
+});
+
 function lucideIconBladeStub(string $icon): string
 {
     return str_replace('[[ICON]]', $icon, <<<'BLADE'
