@@ -23,7 +23,7 @@
             <flux:sidebar.header>
                 <flux:sidebar.brand name="Development Preview" href="{{ route('dev.icon-map') }}" wire:navigate>
                     <x-slot name="logo" class="flex aspect-square size-8 items-center justify-center rounded-md bg-zinc-500 text-white shadow-sm shadow-zinc-500/30 dark:bg-zinc-400 dark:text-zinc-950 dark:shadow-zinc-400/20">
-                        <flux:icon name="cog" variant="mini" class="size-4.5" />
+                        <flux:icon.beaker variant="mini" class="size-4.5" />
                     </x-slot>
                 </flux:sidebar.brand>
                 <flux:sidebar.collapse class="lg:hidden" />
@@ -31,7 +31,7 @@
 
             <flux:sidebar.nav>
                 <flux:sidebar.group heading="Development" class="grid">
-                    <flux:sidebar.item icon="cog" :href="route('dev.icon-map')" :current="request()->routeIs('dev.icon-map')" wire:navigate>
+                    <flux:sidebar.item icon="swatch" :href="route('dev.icon-map')" :current="request()->routeIs('dev.icon-map')" wire:navigate>
                         Icon Set Comparison
                     </flux:sidebar.item>
                 </flux:sidebar.group>
@@ -48,7 +48,7 @@
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
             <flux:brand name="Development Preview" href="{{ route('dev.icon-map') }}" class="ms-2" wire:navigate>
                 <x-slot name="logo" class="flex aspect-square size-8 items-center justify-center rounded-md bg-zinc-500 text-white shadow-sm shadow-zinc-500/30 dark:bg-zinc-400 dark:text-zinc-950 dark:shadow-zinc-400/20">
-                    <flux:icon name="cog" variant="mini" class="size-4.5" />
+                    <flux:icon.beaker variant="mini" class="size-4.5" />
                 </x-slot>
             </flux:brand>
             <flux:spacer />
