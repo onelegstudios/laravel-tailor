@@ -12,13 +12,24 @@ function fluxIconMapSync(string $method, mixed ...$arguments): mixed
 it('extracts static flux icon tags', function (): void {
     $result = fluxIconMapSync('extractIconsFromBlade', <<<'BLADE'
 <flux:icon.chevron-right />
+<flux:icon.loading/>
 <flux:icon.qr-code class="size-4" />
 BLADE);
 
     expect($result['icons'])->toBe([
         'chevron-right',
+        'loading',
         'qr-code',
     ])->and($result['warnings'])->toBe([]);
+});
+
+it('defaults to syncing the package workbench views into the package tailor config', function (): void {
+    $projectRoot = dirname(__DIR__, 3);
+    $defaultViewsRoot = (new ReflectionMethod($GLOBALS['fluxIconMapSyncClass'], 'defaultViewsRoot'))->invoke(null);
+    $defaultConfigPath = (new ReflectionMethod($GLOBALS['fluxIconMapSyncClass'], 'defaultConfigPath'))->invoke(null);
+
+    expect($defaultViewsRoot)->toBe($projectRoot.DIRECTORY_SEPARATOR.'workbench'.DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'views')
+        ->and($defaultConfigPath)->toBe($projectRoot.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'tailor.php');
 });
 
 it('extracts icons from dynamic flux icon attributes', function (): void {
@@ -339,6 +350,58 @@ PHP);
         ])->and($summary['new'])->toBe([
             'exclamation-triangle',
             'loading',
+        ]);
+    } finally {
+        $filesystem->deleteDirectory($root);
+    }
+});
+
+it('sanitizes slash-suffixed icon mappings from existing config', function (): void {
+    $filesystem = new Filesystem;
+    $root = sys_get_temp_dir().'/flux-icon-map-'.bin2hex(random_bytes(8));
+    $viewsRoot = $root.'/views';
+    $configPath = $root.'/config/tailor.php';
+
+    $filesystem->ensureDirectoryExists($viewsRoot);
+    $filesystem->ensureDirectoryExists(dirname($configPath));
+
+    try {
+        $filesystem->put($viewsRoot.'/icons.blade.php', <<<'BLADE'
+<flux:button icon="plus" />
+BLADE);
+
+        $filesystem->put($configPath, <<<'PHP'
+<?php
+
+return [
+    'icons' => [
+        'mappings' => [
+            'loading/' => 'loader-circle',
+            'plus/' => 'circle-plus',
+        ],
+    ],
+];
+PHP);
+
+        $summary = fluxIconMapSync('sync', $viewsRoot, $configPath, $filesystem);
+        $writtenConfig = require $configPath;
+
+        expect($summary['config'])->toBe([
+            'icons' => [
+                'mappings' => [
+                    'exclamation-triangle' => null,
+                    'loading' => 'loader-circle',
+                    'plus' => 'circle-plus',
+                ],
+            ],
+        ])->and($writtenConfig)->toBe([
+            'icons' => [
+                'mappings' => [
+                    'exclamation-triangle' => null,
+                    'loading' => 'loader-circle',
+                    'plus' => 'circle-plus',
+                ],
+            ],
         ]);
     } finally {
         $filesystem->deleteDirectory($root);

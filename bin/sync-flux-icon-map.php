@@ -21,6 +21,8 @@ final class FluxIconMapSync
 {
     private const CONFIG_KEY = 'icons';
 
+    private const ICON_NAME_PATTERN = '/^[a-z0-9-]+$/';
+
     private const CONFIG_SECTIONS = [
         'mappings',
         'new',
@@ -141,16 +143,22 @@ final class FluxIconMapSync
 
     private static function defaultConfigPath(): string
     {
-        $cwd = getcwd() ?: '.';
-
-        return rtrim($cwd, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'tailor.php';
+        return self::defaultProjectRoot()
+            .DIRECTORY_SEPARATOR.'config'
+            .DIRECTORY_SEPARATOR.'tailor.php';
     }
 
     private static function defaultViewsRoot(): string
     {
-        $cwd = getcwd() ?: '.';
+        return self::defaultProjectRoot()
+            .DIRECTORY_SEPARATOR.'workbench'
+            .DIRECTORY_SEPARATOR.'resources'
+            .DIRECTORY_SEPARATOR.'views';
+    }
 
-        return rtrim($cwd, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'views';
+    private static function defaultProjectRoot(): string
+    {
+        return dirname(__DIR__);
     }
 
     /**
@@ -227,9 +235,9 @@ final class FluxIconMapSync
     private static function normalizeConfig(array $config): array
     {
         return [
-            'mappings' => self::sortMappings($config['mappings'] ?? []),
+            'mappings' => self::normalizeMappings($config['mappings'] ?? []),
             'new' => self::normalizeStringList($config['new'] ?? []),
-            'removed' => self::sortMappings($config['removed'] ?? []),
+            'removed' => self::normalizeMappings($config['removed'] ?? []),
         ];
     }
 
@@ -267,17 +275,9 @@ final class FluxIconMapSync
         $normalized = [];
 
         foreach ($values as $value) {
-            if (! is_scalar($value) && $value !== null) {
-                continue;
-            }
+            $value = self::normalizeIconName($value);
 
             if ($value === null) {
-                continue;
-            }
-
-            $value = trim((string) $value);
-
-            if ($value === '') {
                 continue;
             }
 
@@ -286,6 +286,62 @@ final class FluxIconMapSync
 
         $normalized = array_values(array_unique($normalized));
         sort($normalized);
+
+        return $normalized;
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    private static function normalizeMappings(mixed $mappings): array
+    {
+        if (! is_array($mappings)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach ($mappings as $icon => $target) {
+            $normalizedIcon = self::normalizeIconName($icon);
+
+            if ($normalizedIcon === null) {
+                continue;
+            }
+
+            $normalizedTarget = $target === null ? null : self::normalizeIconName($target);
+
+            if ($target !== null && $normalizedTarget === null) {
+                continue;
+            }
+
+            if (! array_key_exists($normalizedIcon, $normalized) || ($normalized[$normalizedIcon] === null && $normalizedTarget !== null)) {
+                $normalized[$normalizedIcon] = $normalizedTarget;
+            }
+        }
+
+        return self::sortMappings($normalized);
+    }
+
+    private static function normalizeIconName(mixed $value): ?string
+    {
+        if (! is_scalar($value) && $value !== null) {
+            return null;
+        }
+
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = strtolower(trim((string) $value));
+        $normalized = rtrim($normalized, '/');
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (preg_match(self::ICON_NAME_PATTERN, $normalized) !== 1) {
+            return null;
+        }
 
         return $normalized;
     }

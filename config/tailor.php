@@ -1,6 +1,5 @@
 <?php
 
-// config for Onelegstudios/Tailor
 return [
     'icons' => [
         'mappings' => [
