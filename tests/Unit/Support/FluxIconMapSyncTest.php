@@ -136,12 +136,14 @@ PHP);
         $writtenConfig = require $configPath;
 
         expect($summary['config'])->toBe([
-            'mappings' => [
-                'exclamation-triangle' => null,
-                'loading' => null,
-                'plus' => null,
+            'feature_flag' => true,
+            'icons' => [
+                'mappings' => [
+                    'exclamation-triangle' => null,
+                    'loading' => null,
+                    'plus' => null,
+                ],
             ],
-            'removed' => [],
         ])->and($writtenConfig)->toBe([
             'feature_flag' => true,
             'icons' => [
@@ -213,6 +215,19 @@ BLADE);
             'bars-2',
             'exclamation-triangle',
             'loading',
+        ])->and($secondRun['config'])->toBe([
+            'icons' => [
+                'mappings' => [
+                    'bars-2' => null,
+                    'chevron-down' => 'chevron-right',
+                    'exclamation-triangle' => null,
+                    'loading' => null,
+                    'plus' => 'circle-plus',
+                ],
+                'removed' => [
+                    'chevron-down' => 'chevron-right',
+                ],
+            ],
         ])->and($writtenConfig)->toBe([
             'icons' => [
                 'mappings' => [
@@ -258,12 +273,13 @@ BLADE);
             'loading',
             'plus',
         ])->and($summary['config'])->toBe([
-            'mappings' => [
-                'exclamation-triangle' => null,
-                'loading' => null,
-                'plus' => null,
+            'icons' => [
+                'mappings' => [
+                    'exclamation-triangle' => null,
+                    'loading' => null,
+                    'plus' => null,
+                ],
             ],
-            'removed' => [],
         ])->and($writtenConfig)->toBe([
             'icons' => [
                 'mappings' => [
@@ -313,12 +329,13 @@ PHP);
         $summary = fluxIconMapSync('sync', $viewsRoot, $configPath, $filesystem);
 
         expect($summary['config'])->toBe([
-            'mappings' => [
-                'exclamation-triangle' => null,
-                'loading' => null,
-                'plus' => 'circle-plus',
+            'icons' => [
+                'mappings' => [
+                    'exclamation-triangle' => null,
+                    'loading' => null,
+                    'plus' => 'circle-plus',
+                ],
             ],
-            'removed' => [],
         ])->and($summary['new'])->toBe([
             'exclamation-triangle',
             'loading',

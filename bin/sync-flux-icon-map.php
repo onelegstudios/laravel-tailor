@@ -63,7 +63,7 @@ final class FluxIconMapSync
 
     /**
      * @return array{
-     *     config: array{mappings: array<mixed>, removed: array<mixed>},
+     *     config: array<mixed>,
      *     configPath: string,
      *     detected: list<string>,
      *     new: list<string>,
@@ -82,8 +82,8 @@ final class FluxIconMapSync
         }
 
         $loadedConfig = self::loadConfig($configPath, $filesystem);
-        $existingConfig = $loadedConfig['config'];
-        $previousMappings = $existingConfig['mappings'];
+        $existingIconConfig = $loadedConfig['iconConfig'];
+        $previousMappings = $existingIconConfig['mappings'];
 
         $scan = self::scanViews($viewsRoot, $filesystem);
         $detected = self::mergeRequiredIcons($scan['icons']);
@@ -107,15 +107,19 @@ final class FluxIconMapSync
             ->sortKeys()
             ->all();
 
-        $config = [
+        $iconConfig = [
             'mappings' => $mappings,
             'removed' => $removed,
         ];
 
+        $config = self::mergeRootConfig(
+            $loadedConfig['rootConfig'],
+            $loadedConfig['iconRootConfig'],
+            $iconConfig,
+        );
+
         $filesystem->ensureDirectoryExists(dirname($configPath));
-        $filesystem->replace($configPath, self::formatConfigFile(
-            self::mergeRootConfig($loadedConfig['rootConfig'], $loadedConfig['iconRootConfig'], $config, $loadedConfig['wasWrapped'])
-        ));
+        $filesystem->replace($configPath, self::formatConfigFile($config));
 
         return [
             'config' => $config,
@@ -151,20 +155,18 @@ final class FluxIconMapSync
 
     /**
      * @return array{
-     *     config: array{mappings: array<mixed>, new: list<string>, removed: array<mixed>},
+     *     iconConfig: array{mappings: array<mixed>, new: list<string>, removed: array<mixed>},
      *     iconRootConfig: array<mixed>,
-     *     rootConfig: array<mixed>,
-     *     wasWrapped: bool
+     *     rootConfig: array<mixed>
      * }
      */
     private static function loadConfig(string $configPath, Filesystem $filesystem): array
     {
         if (! $filesystem->exists($configPath)) {
             return [
-                'config' => self::normalizeConfig([]),
+                'iconConfig' => self::normalizeConfig([]),
                 'iconRootConfig' => [],
                 'rootConfig' => [],
-                'wasWrapped' => false,
             ];
         }
 
@@ -180,10 +182,9 @@ final class FluxIconMapSync
             self::assertConfigSections($config, $configPath);
 
             return [
-                'config' => self::normalizeConfig($config),
+                'iconConfig' => self::normalizeConfig($config),
                 'iconRootConfig' => [],
                 'rootConfig' => $config,
-                'wasWrapped' => false,
             ];
         }
 
@@ -196,10 +197,9 @@ final class FluxIconMapSync
         self::assertConfigSections($wrappedConfig, $configPath, self::CONFIG_KEY.'.');
 
         return [
-            'config' => self::normalizeConfig($wrappedConfig),
+            'iconConfig' => self::normalizeConfig($wrappedConfig),
             'iconRootConfig' => $wrappedConfig,
             'rootConfig' => $config,
-            'wasWrapped' => true,
         ];
     }
 
@@ -304,37 +304,29 @@ final class FluxIconMapSync
     /**
      * @param  array<mixed>  $rootConfig
      * @param  array<mixed>  $iconRootConfig
-     * @param  array{mappings: array<mixed>, removed: array<mixed>}  $config
+     * @param  array{mappings: array<mixed>, removed: array<mixed>}  $iconConfig
      * @return array<mixed>
      */
-    private static function mergeRootConfig(array $rootConfig, array $iconRootConfig, array $config, bool $wasWrapped): array
+    private static function mergeRootConfig(array $rootConfig, array $iconRootConfig, array $iconConfig): array
     {
-        $mergedIconConfig = self::mergeIconConfig($wasWrapped ? $iconRootConfig : [], $config);
-
-        if ($wasWrapped) {
-            $rootConfig[self::CONFIG_KEY] = $mergedIconConfig;
-
-            return $rootConfig;
-        }
-
         $rootConfig = array_diff_key($rootConfig, array_flip(self::CONFIG_SECTIONS));
-        $rootConfig[self::CONFIG_KEY] = $mergedIconConfig;
+        $rootConfig[self::CONFIG_KEY] = self::mergeIconConfig($iconRootConfig, $iconConfig);
 
         return $rootConfig;
     }
 
     /**
      * @param  array<mixed>  $iconRootConfig
-     * @param  array{mappings: array<mixed>, removed: array<mixed>}  $config
+     * @param  array{mappings: array<mixed>, removed: array<mixed>}  $iconConfig
      * @return array<mixed>
      */
-    private static function mergeIconConfig(array $iconRootConfig, array $config): array
+    private static function mergeIconConfig(array $iconRootConfig, array $iconConfig): array
     {
         $iconRootConfig = array_diff_key($iconRootConfig, array_flip(self::CONFIG_SECTIONS));
-        $iconRootConfig['mappings'] = $config['mappings'];
+        $iconRootConfig['mappings'] = $iconConfig['mappings'];
 
-        if ($config['removed'] !== []) {
-            $iconRootConfig['removed'] = $config['removed'];
+        if ($iconConfig['removed'] !== []) {
+            $iconRootConfig['removed'] = $iconConfig['removed'];
         }
 
         return $iconRootConfig;
