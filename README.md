@@ -23,13 +23,79 @@ composer require your-vendor/laravel-tailor --dev
 
 After requiring this package in your Laravel application and installing a Laravel starter kit, run the tailor command to apply your preferred modifications:
 
-```php
+```bash
 php artisan tailor:install
 ```
 
-You will be prompted to select which modifications to apply, such as:
+You will be prompted to select which modifications to apply. Laravel Tailor currently ships with:
 
-- Add features here
+- Use Lucide icons
+
+If you only want to run the icon migration on an existing project, you can call the command directly:
+
+```bash
+php artisan tailor:use-lucide-icons
+```
+
+### Use Lucide Icons
+
+`tailor:use-lucide-icons` migrates supported Flux icon usage to published Lucide icon components.
+
+When you run it, Tailor:
+
+- scans `resources/views` for supported Flux icon references
+- publishes the mapped Lucide icon Blade files into `resources/views/flux/icon`
+- rewrites supported literal icon usages such as `<flux:icon.plus />`, `<flux:icon name="users" />`, `icon="plus"`, `icon:leading="chevron-down"`, and `icon-trailing="chevron-down"`
+- leaves unresolved dynamic icon expressions unchanged and reports each one as a warning instead of guessing
+- adds Tailor's package `@source` directive to `resources/css/app.css` when that file exists, so Tailwind can see the package views used by the published icons
+
+Icon names are resolved from Tailor's icon mapping configuration. The default mappings cover common Flux-to-Lucide translations such as `loading` to `loader-circle` and `exclamation-triangle` to `triangle-alert`.
+
+#### Custom icon mappings
+
+If you want to use different Lucide icons than Tailor's defaults, publish the package config first:
+
+```bash
+php artisan vendor:publish --tag=tailor-config
+```
+
+This creates `config/tailor.php`. From there, update `icons.mappings` to point Flux icon names at the Lucide icons you want to publish.
+
+```php
+'icons' => [
+	'mappings' => [
+		'plus' => 'circle-plus',
+		'users' => 'users-round',
+		'layout-grid' => 'layout-grid',
+	],
+],
+```
+
+Map a Flux icon name to any Lucide icon name you want Tailor to publish. If you want to keep an icon name unchanged but still make sure its Lucide Blade view is published, map it to itself.
+
+After updating the config, run the migration command again:
+
+```bash
+php artisan tailor:use-lucide-icons
+```
+
+For example, a view like this:
+
+```blade
+<flux:icon.plus />
+<flux:button icon="loading" />
+<flux:button :icon="$statusIcon" />
+```
+
+becomes:
+
+```blade
+<flux:icon.plus />
+<flux:button icon="loader-circle" />
+<flux:button :icon="$statusIcon" />
+```
+
+In that example, Tailor publishes both the `plus` and `loader-circle` Lucide icon views. The bound `:icon` expression is left alone unless Tailor can safely resolve every literal icon name in the expression.
 
 ## Why Tailor?
 
