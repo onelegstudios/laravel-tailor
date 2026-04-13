@@ -539,7 +539,12 @@ class FluxBladeIconProcessor
 
         $nameStart = $index;
 
-        while ($index < $length && ! ctype_space($tag[$index]) && $tag[$index] !== '>') {
+        while (
+            $index < $length
+            && ! ctype_space($tag[$index])
+            && $tag[$index] !== '>'
+            && ! $this->isSelfClosingTagTerminator($tag, $index)
+        ) {
             $index++;
         }
 
@@ -645,7 +650,12 @@ class FluxBladeIconProcessor
 
             $valueStart = $index;
 
-            while ($index < $length && ! ctype_space($tag[$index]) && $tag[$index] !== '>') {
+            while (
+                $index < $length
+                && ! ctype_space($tag[$index])
+                && $tag[$index] !== '>'
+                && ! $this->isSelfClosingTagTerminator($tag, $index)
+            ) {
                 $index++;
             }
 
@@ -664,6 +674,11 @@ class FluxBladeIconProcessor
             'nameEnd' => $nameEnd,
             'attributes' => $attributes,
         ];
+    }
+
+    private function isSelfClosingTagTerminator(string $tag, int $index): bool
+    {
+        return $tag[$index] === '/' && ($tag[$index + 1] ?? null) === '>';
     }
 
     /**
