@@ -2,9 +2,9 @@
 
 namespace Onelegstudios\Tailor;
 
+use Onelegstudios\Tailor\Commands\TailorCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Onelegstudios\Tailor\Commands\TailorCommand;
 
 class TailorServiceProvider extends PackageServiceProvider
 {
