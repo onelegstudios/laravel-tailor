@@ -18,6 +18,7 @@
     <testsuites>
         <testsuite name="Onelegstudios Test Suite">
             <directory>tests</directory>
+            <exclude>tests/fixtures</exclude>
         </testsuite>
     </testsuites>
     <logging>

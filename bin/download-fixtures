@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Dev-only script: download the Livewire starter-kit variants used as test
+# fixtures. Each install variant is published as a branch of the starter kit
+# repo; we fetch the branch tarball (tracked files only, no .git history) and
+# extract it into a per-variant fixture folder.
+#
+# The whole starter-kits directory is rebuilt from scratch on every run, so the
+# fixtures always mirror the current upstream structure — files that upstream
+# moved/renamed/removed, or variants dropped from the list below, never linger
+# as stale leftovers. After running, review with `git status` and commit.
+
+REPO="laravel/livewire-starter-kit"
+BRANCHES=("main" "components" "teams")
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+DEST="$ROOT/tests/fixtures/starter-kits"
+
+# Clean slate: wipe every variant, then re-download. (Keeps the parent
+# tests/fixtures dir and its .gitignore intact.)
+rm -rf "$DEST"
+
+for branch in "${BRANCHES[@]}"; do
+  target="$DEST/$branch"
+  echo "==> $branch"
+  mkdir -p "$target"
+  # Skip each starter kit's own tests/ dir — tailor never needs it, and it
+  # keeps those bundled *Test.php files out of the fixture tree entirely.
+  curl -fsSL "https://github.com/$REPO/archive/refs/heads/$branch.tar.gz" \
+    | tar -xz -C "$target" --strip-components=1 \
+        --exclude='*/tests' --exclude='*/tests/*'
+  printf 'source: %s@%s\ndownloaded: %s\n' \
+    "$REPO" "$branch" "$(date -u +%FT%TZ)" > "$target/.fixture-source"
+done
+
+echo "Done. Review with 'git status' and commit fixtures/."
