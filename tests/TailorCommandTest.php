@@ -3,7 +3,7 @@
 it('asks about the UI kit first, then the remaining options', function () {
     $this->artisan('tailor')
         ->expectsChoice('What UI kit do you want to use?', 'lucide', [
-            'hero' => 'Flux with Heroi cons',
+            'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
             'tall-stack' => 'Tall Stack UI',
         ])
