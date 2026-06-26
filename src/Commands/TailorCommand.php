@@ -7,6 +7,7 @@ use Illuminate\Console\Command;
 use function Laravel\Prompts\intro;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\outro;
+use function Laravel\Prompts\select;
 
 class TailorCommand extends Command
 {
@@ -18,10 +19,20 @@ class TailorCommand extends Command
     {
         intro('Welcome to Tailor — let\'s customize your starter kit.');
 
-        $options = multiselect(
-            label: 'What would you like to tailor?',
+        $uikit = select(
+            label: 'What UI kit do you want to use?',
             options: [
-                'lucide_icons' => 'Use Lucide icons',
+                'hero' => 'Flux with Heroicons',
+                'lucide' => 'Flux with Lucide Icons',
+                'tall-stack' => 'Tall Stack UI',
+            ],
+            default: 'hero',
+            hint: 'Use the arrow keys to choose, enter to tailor.',
+        );
+
+        $options = multiselect(
+            label: 'What else would you like to tailor?',
+            options: [
                 'move_auth' => 'Move the auth folder',
             ],
             hint: 'Use space to select, enter to confirm.',
