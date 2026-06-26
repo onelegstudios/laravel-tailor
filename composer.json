@@ -48,7 +48,24 @@
         "post-autoload-dump": "@composer run prepare",
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
         "analyse": "vendor/bin/phpstan analyse",
-        "test": "vendor/bin/pest",
+        "lint": [
+            "pint --parallel"
+        ],
+        "lint:check": [
+            "pint --parallel --test"
+        ],
+        "ci:check": [
+            "Composer\\Config::disableProcessTimeout",
+            "@test"
+        ],
+        "types:check": [
+            "phpstan analyse"
+        ],
+        "test": [
+            "@lint:check",
+            "@types:check",
+            "pest --parallel"
+        ],
         "test-coverage": "vendor/bin/pest --coverage",
         "format": "vendor/bin/pint"
     },
