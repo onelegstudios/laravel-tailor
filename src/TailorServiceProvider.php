@@ -2,6 +2,7 @@
 
 namespace Onelegstudios\Tailor;
 
+use Livewire\Livewire;
 use Onelegstudios\Tailor\Commands\TailorCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -21,5 +22,20 @@ class TailorServiceProvider extends PackageServiceProvider
             ->hasViews()
             ->hasMigration('create_laravel_tailor_table')
             ->hasCommand(TailorCommand::class);
+    }
+
+    public function packageBooted(): void
+    {
+        // Resolve the package's single-file page components (e.g. the icon
+        // reference page at resources/views/pages) under the "tailor" namespace.
+        Livewire::addNamespace('tailor', viewPath: __DIR__.'/../resources/views/pages');
+
+        // The icon reference page is a local-development aid only; never expose
+        // its route in any other environment.
+        if ($this->app->environment('local')) {
+            $this->app->booted(function (): void {
+                $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+            });
+        }
     }
 }

@@ -8,16 +8,14 @@ it('groups icons into starter-kit and flux in config/tailor.php', function () us
     $starterKit = $icons['starter-kit'];
     $flux = $icons['flux'];
 
-    // Heroicons and flux.normal need a Lucide mapping (empty); lucide and
-    // animated map to themselves.
-    expect($starterKit['heroicons'])->each->toBe('');
-    expect($flux['normal'])->each->toBe('');
+    // The lucide set maps to itself; every other set carries its Lucide
+    // replacement, which may differ from the original name.
     foreach ($starterKit['lucide'] as $name => $value) {
         expect($value)->toBe($name);
     }
-    foreach ($flux['animated'] as $name => $value) {
-        expect($value)->toBe($name);
-    }
+    expect($starterKit['heroicons'])->each(fn ($replacement) => $replacement->toBeString()->not->toBe(''));
+    expect($flux['normal'])->each(fn ($replacement) => $replacement->toBeString()->not->toBe(''));
+    expect($flux['animated'])->each(fn ($replacement) => $replacement->toBeString()->not->toBe(''));
 
     $heroicons = array_keys($starterKit['heroicons']);
     $lucide = array_keys($starterKit['lucide']);
