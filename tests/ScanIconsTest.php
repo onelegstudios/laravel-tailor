@@ -29,7 +29,10 @@ it('groups icons into starter-kit and flux in config/tailor.php', function () us
         ->not->toContain('calendar')       // used only inside a Flux component
         ->toContain('chevron-down')
         ->toContain('magnifying-glass')
-        ->toContain('x-mark');
+        ->toContain('x-mark')
+        ->toContain('envelope')            // via <flux:icon name="..."> attr syntax
+        ->toContain('information-circle')
+        ->toContain('users');
 
     // starter-kit.lucide: the locally overridden Lucide icons.
     expect($lucide)
@@ -44,6 +47,9 @@ it('groups icons into starter-kit and flux in config/tailor.php', function () us
         ->toContain('calendar')            // date-picker
         ->toContain('clock')               // time-picker
         ->toContain('eye-dropper')         // color-picker
+        ->toContain('document')            // file-item, via @props default icon
+        ->toContain('cloud-arrow-up')      // file-upload dropzone @props default
+        ->toContain('exclamation-triangle')// error, via @props default icon
         ->not->toContain('chevron-down')   // already an app heroicon
         ->not->toContain('loading');
 

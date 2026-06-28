@@ -24,10 +24,20 @@
  * Values: heroicons and flux.normal start empty (their Lucide equivalent is
  * filled in later). lucide and animated map to themselves (correct in any kit).
  *
- * Icons are referenced two ways in the Flux markup:
+ * Icons are referenced four ways in the Flux markup:
  *
- *   <flux:icon.chevron-down />          (component syntax)
+ *   <flux:icon.chevron-down />          (component dot syntax)
+ *   <flux:icon name="loading" />        (component name attr)
  *   <flux:button icon="trash" />        (icon / icon:trailing / icon:leading attr)
+ *   @props(['icon' => 'document'])      (component's default icon, e.g. file-item)
+ *
+ * Limitation — hardcoded inline SVGs: a few Flux components draw their glyph as a
+ * raw <svg><path> embedded in the blade rather than via the icon system above
+ * (e.g. sidebar/collapse's panel toggle, toast's close, the Pro editor toolbar).
+ * These have no icon name to scan and no flux/icon/<name>.blade.php hook to
+ * override, so they can't be captured here or remapped through config's icons key.
+ * Re-skinning them would require overriding the whole component blade — out of
+ * scope for this name-based scanner.
  *
  * Note on Flux Pro: Pro adds components, not an icon set, so its component blades
  * are scanned alongside the free package's. Both are pulled in as dev
@@ -146,9 +156,24 @@ function scanIcons(array $files): array
             }
         }
 
+        // <flux:icon name="loading" /> (name attr; dynamic "{{ $icon }}" excluded)
+        if (preg_match_all('/<flux:icon\b[^>]*\bname="([a-z0-9-]+)"/', $contents, $m) > 0) {
+            foreach ($m[1] as $name) {
+                $found[$name] = true;
+            }
+        }
+
         // icon="trash"  icon:trailing="chevron-down"  icon:leading="plus"
         // (deliberately excludes icon:variant="outline" and other attributes)
         if (preg_match_all('/\bicon(?::(?:trailing|leading))?="([a-z0-9-]+)"/', $contents, $m) > 0) {
+            foreach ($m[1] as $name) {
+                $found[$name] = true;
+            }
+        }
+
+        // @props(['icon' => 'document']) — a component's hardcoded default icon.
+        // Keyed on exactly 'icon', so 'iconVariant' => 'mini' is left out.
+        if (preg_match_all('/[\'"]icon[\'"]\s*=>\s*[\'"]([a-z0-9-]+)[\'"]/', $contents, $m) > 0) {
             foreach ($m[1] as $name) {
                 $found[$name] = true;
             }
