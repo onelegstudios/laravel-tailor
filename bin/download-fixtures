@@ -16,21 +16,32 @@ BRANCHES=("main" "components" "teams")
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DEST="$ROOT/tests/fixtures/starter-kits"
 
-# Clean slate: wipe every variant, then re-download. (Keeps the parent
-# tests/fixtures dir and its .gitignore intact.)
-rm -rf "$DEST"
+# Build into a temp dir first, then swap it into place only once every branch
+# has downloaded cleanly. This keeps the existing fixtures intact if any
+# download fails partway through, instead of leaving a half-wiped tree.
+staging="$(mktemp -d)"
+trap 'rm -rf "$staging"' EXIT
 
 for branch in "${BRANCHES[@]}"; do
-  target="$DEST/$branch"
+  target="$staging/$branch"
   echo "==> $branch"
   mkdir -p "$target"
-  # Skip each starter kit's own tests/ dir — tailor never needs it, and it
-  # keeps those bundled *Test.php files out of the fixture tree entirely.
+  # Skip each starter kit's own top-level tests/ dir — tailor never needs it,
+  # and it keeps those bundled *Test.php files out of the fixture tree. Anchor
+  # to the archive's top dir (GitHub names it "<repo>-<branch>") so a nested
+  # tests/ dir elsewhere in the tree is never caught.
+  prefix="$(basename "$REPO")-$branch"
   curl -fsSL "https://github.com/$REPO/archive/refs/heads/$branch.tar.gz" \
     | tar -xz -C "$target" --strip-components=1 \
-        --exclude='*/tests' --exclude='*/tests/*'
+        --exclude="$prefix/tests" --exclude="$prefix/tests/*"
   printf 'source: %s@%s\ndownloaded: %s\n' \
     "$REPO" "$branch" "$(date -u +%FT%TZ)" > "$target/.fixture-source"
 done
+
+# All branches succeeded: atomically replace the variants. (Keeps the parent
+# tests/fixtures dir and its .gitignore intact.)
+rm -rf "$DEST"
+mkdir -p "$DEST"
+mv "$staging"/* "$DEST/"
 
 echo "Done. Review with 'git status' and commit fixtures/."
