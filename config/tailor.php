@@ -16,7 +16,7 @@ return [
                 'document-duplicate' => 'copy',
                 'eye' => 'eye',
                 'eye-slash' => 'eye-off',
-                'finger-print' => 'fingerprint',
+                'finger-print' => 'fingerprint-pattern',
                 'home' => 'house',
                 'key' => 'key-round',
                 'lock-closed' => 'lock',
