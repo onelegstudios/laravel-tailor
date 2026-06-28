@@ -2,14 +2,10 @@
 
 namespace Onelegstudios\Tailor\Actions;
 
-use Illuminate\Console\OutputStyle;
 use Illuminate\Filesystem\Filesystem;
-use Onelegstudios\Tailor\Actions\Concerns\DownloadsIcons;
 
 class PublishFluxIcons
 {
-    use DownloadsIcons;
-
     /**
      * Tailwind animation utility added to animated icons (e.g. the loading
      * spinner) so they keep moving once swapped for a static Lucide glyph.
@@ -21,23 +17,28 @@ class PublishFluxIcons
     ) {}
 
     /**
-     * Download the Lucide replacements for the icons Flux's own components use,
-     * then alias each under its original name so Flux's internal references keep
-     * resolving. Animated icons get a Tailwind animation class on the alias.
+     * The Lucide replacement names that Flux's own components need downloaded.
+     * Returned so the caller can fold them into a single download pass.
+     *
+     * @param  array<string, string>  $normal  original Flux icon name => Lucide replacement
+     * @param  array<string, string>  $animated  original animated icon name => Lucide replacement
+     * @return array<int, string>
+     */
+    public function replacements(array $normal, array $animated): array
+    {
+        return array_merge(array_values($normal), array_values($animated));
+    }
+
+    /**
+     * Alias each downloaded replacement under its original Flux name so Flux's
+     * internal references keep resolving. Animated icons get a Tailwind animation
+     * class on the alias.
      *
      * @param  array<string, string>  $normal  original Flux icon name => Lucide replacement
      * @param  array<string, string>  $animated  original animated icon name => Lucide replacement
      */
-    public function execute(string $iconPath, array $normal, array $animated, ?OutputStyle $output = null): void
+    public function applyAliases(string $iconPath, array $normal, array $animated): void
     {
-        $replacements = array_merge(array_values($normal), array_values($animated));
-
-        if (array_filter($replacements) === []) {
-            return;
-        }
-
-        $this->downloadIcons($iconPath, $replacements, $output);
-
         foreach ($normal as $original => $replacement) {
             $this->alias($iconPath, $replacement, $original);
         }

@@ -51,10 +51,22 @@ class TailorCommand extends Command
             $map = array_merge(...array_values($starterKit));
 
             $replaceHeroicons->execute(resource_path('views'), $map);
-            $publishLucideIcons->execute($iconPath, array_values($map), $this->output);
 
             $flux = config('tailor.icons.flux', []);
-            $publishFluxIcons->execute($iconPath, $flux['normal'] ?? [], $flux['animated'] ?? [], $this->output);
+            $normal = $flux['normal'] ?? [];
+            $animated = $flux['animated'] ?? [];
+
+            // Gather every icon name up front — the starter-kit replacements plus
+            // the Lucide glyphs Flux's own components need — so the whole set is
+            // downloaded in a single pass.
+            $icons = [
+                ...array_values($map),
+                ...$publishFluxIcons->replacements($normal, $animated),
+            ];
+
+            $publishLucideIcons->execute($iconPath, $icons, $this->output);
+
+            $publishFluxIcons->applyAliases($iconPath, $normal, $animated);
         }
 
         outro('All done! Your starter kit has been tailored.');
