@@ -355,8 +355,6 @@ if (! $willWrite) {
     exit(0);
 }
 
-$config['icons'] = $merged;
-
 /**
  * Pretty-print a value as PHP using short-array syntax.
  */
@@ -383,7 +381,63 @@ function exportPhp(mixed $value, int $depth): string
     return "[\n".implode("\n", $lines)."\n".$closePad.']';
 }
 
-$contents = "<?php\n\n// config for Onelegstudios/Tailor\nreturn ".exportPhp($config, 0).";\n";
+/**
+ * Find the `'icons' => [ ... ]` span in the config source by matching brackets
+ * (ignoring any inside quoted strings). Returns the start offset at the icons
+ * key and the length through the matching close bracket, or null if not found.
+ *
+ * @return array{0: int, 1: int}|null
+ */
+function locateIconsSpan(string $source): ?array
+{
+    if (preg_match('/([\'"])icons\1\s*=>\s*\[/', $source, $m, PREG_OFFSET_CAPTURE) !== 1) {
+        return null;
+    }
+
+    $keyStart = $m[0][1];
+    $i = $keyStart + strlen($m[0][0]) - 1; // the opening [
+    $len = strlen($source);
+    $depth = 0;
+
+    for (; $i < $len; $i++) {
+        $char = $source[$i];
+
+        if ($char === '\'' || $char === '"') {
+            // Skip the string literal so brackets inside it don't count.
+            for ($i++; $i < $len; $i++) {
+                if ($source[$i] === '\\') {
+                    $i++;
+                } elseif ($source[$i] === $char) {
+                    break;
+                }
+            }
+        } elseif ($char === '[') {
+            $depth++;
+        } elseif ($char === ']' && --$depth === 0) {
+            return [$keyStart, $i - $keyStart + 1];
+        }
+    }
+
+    return null;
+}
+
+// Rewrite only the `icons` array, leaving the rest of the file (comments, header,
+// any other keys, dynamic values) untouched. A fresh file gets a minimal stub.
+$iconsBlock = "'icons' => ".exportPhp($merged, 1);
+
+if (! is_file($configFile)) {
+    $contents = "<?php\n\n// config for Onelegstudios/Tailor\nreturn [\n    {$iconsBlock},\n];\n";
+} else {
+    $original = file_get_contents($configFile);
+    $span = $original === false ? null : locateIconsSpan($original);
+
+    if ($span === null) {
+        fwrite(STDERR, "Could not locate the 'icons' key in {$configFile}; aborting to avoid clobbering it.\n");
+        exit(1);
+    }
+
+    $contents = substr_replace($original, $iconsBlock, $span[0], $span[1]);
+}
 
 // Write atomically: a temp file in the same dir, then rename into place, so an
 // interrupted or failed write can never leave config/tailor.php truncated.
