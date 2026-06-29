@@ -64,12 +64,18 @@ class TailorCommand extends Command
                 ...$publishFluxIcons->replacements($normal, $animated),
             ];
 
-            $publishLucideIcons->execute($iconPath, $icons, $this->output);
+            $failed = $publishLucideIcons->execute($iconPath, $icons, $this->output);
 
             // Starter-kit glyphs are referenced directly by their Lucide name, so
             // they must survive the Flux aliasing pass even when a Flux icon shares
             // the same replacement.
             $publishFluxIcons->applyAliases($iconPath, $normal, $animated, array_values($map));
+
+            if ($failed !== []) {
+                outro('Tailoring finished, but '.count($failed).' icon(s) could not be downloaded.');
+
+                return self::FAILURE;
+            }
         }
 
         outro('All done! Your starter kit has been tailored.');

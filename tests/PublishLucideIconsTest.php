@@ -22,7 +22,9 @@ afterEach(function () {
     (new Filesystem)->deleteDirectory($this->tempDir);
 });
 
-it('empties existing icon blades but leaves other files alone', function () {
+it('removes stale icon blades but leaves the new set and other files alone', function () {
+    RecordingFluxIconCommand::$targetDir = $this->tempDir;
+
     file_put_contents($this->tempDir.'/book-open-text.blade.php', 'old');
     file_put_contents($this->tempDir.'/layout-grid.blade.php', 'old');
     file_put_contents($this->tempDir.'/keep.txt', 'keep');
@@ -31,7 +33,21 @@ it('empties existing icon blades but leaves other files alone', function () {
 
     expect(file_exists($this->tempDir.'/book-open-text.blade.php'))->toBeFalse()
         ->and(file_exists($this->tempDir.'/layout-grid.blade.php'))->toBeFalse()
-        ->and(file_exists($this->tempDir.'/keep.txt'))->toBeTrue();
+        ->and(file_exists($this->tempDir.'/keep.txt'))->toBeTrue()
+        ->and(file_exists($this->tempDir.'/house.blade.php'))->toBeTrue();
+});
+
+it('leaves the existing icons in place when a download fails', function () {
+    RecordingFluxIconCommand::$targetDir = $this->tempDir;
+    RecordingFluxIconCommand::$fail = ['house'];
+
+    file_put_contents($this->tempDir.'/book-open-text.blade.php', 'old');
+    file_put_contents($this->tempDir.'/layout-grid.blade.php', 'old');
+
+    $this->action->execute($this->tempDir, ['house']);
+
+    expect(file_exists($this->tempDir.'/book-open-text.blade.php'))->toBeTrue()
+        ->and(file_exists($this->tempDir.'/layout-grid.blade.php'))->toBeTrue();
 });
 
 it('downloads the deduped, non-empty icon set via flux:icon', function () {

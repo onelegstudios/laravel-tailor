@@ -91,6 +91,29 @@ it('downloads the Flux internal icons when the Lucide kit is selected', function
         ->and(RecordingFluxIconCommand::$received)->toBe(['pipette', 'loader-circle']);
 });
 
+it('fails when an icon cannot be downloaded', function () {
+    config()->set('tailor.icons', [
+        'starter-kit' => [
+            'heroicons' => ['home' => 'house', 'trash' => 'trash-2'],
+            'lucide' => [],
+        ],
+        'flux' => ['normal' => [], 'animated' => []],
+    ]);
+
+    RecordingFluxIconCommand::$fail = ['trash-2'];
+
+    $this->artisan('tailor')
+        ->expectsChoice('What UI kit do you want to use?', 'lucide', [
+            'hero' => 'Flux with Heroicons',
+            'lucide' => 'Flux with Lucide Icons',
+            'tall-stack' => 'Tall Stack UI',
+        ])
+        ->expectsChoice('What else would you like to tailor?', [], [
+            'move_auth' => 'Move the auth folder',
+        ])
+        ->assertFailed();
+});
+
 it('does not touch icons when the Heroicons kit is selected', function () {
     $this->artisan('tailor')
         ->expectsChoice('What UI kit do you want to use?', 'hero', [
