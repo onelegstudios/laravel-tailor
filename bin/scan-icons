@@ -330,23 +330,31 @@ function reportGroups($stream, string $verb, array $groups): void
     }
 }
 
-// --check: report drift (additions only) and exit without writing.
+// Build the would-be file once; both --check and the writer compare it to disk so
+// they agree on "out of sync" (new icons, formatting drift, or --prune staleness).
+$iconsBlock = "'icons' => ".exportPhp($merged, 1);
+$current = is_file($configFile) ? file_get_contents($configFile) : '';
+$contents = buildConfigContents($configFile, $iconsBlock);
+$changed = $contents !== $current;
+
+// --check: report drift and exit without writing.
 if ($check) {
-    if ($totalNew === 0) {
+    if (! $changed) {
         echo "config/tailor.php is up to date ({$summary}).\n";
         exit(0);
     }
 
     fwrite(STDERR, "config/tailor.php is out of sync:\n");
     reportGroups(STDERR, 'missing', $added);
-    fwrite(STDERR, "Run bin/scan-icons to update it.\n");
+    if ($prune) {
+        reportGroups(STDERR, 'stale', $removed);
+    }
+    fwrite(STDERR, 'Run bin/scan-icons'.($prune ? ' --prune' : '')." to update it.\n");
     exit(1);
 }
 
-// Stale entries only change the file when pruning; in append-only mode they stay.
-$willWrite = $totalNew > 0 || ($prune && $totalStale > 0);
-
-if (! $willWrite) {
+// Nothing to change: in append-only mode stale entries stay (warned, not removed).
+if (! $changed) {
     if ($totalStale > 0) {
         fwrite(STDERR, "Warning: {$totalStale} icon(s) no longer found in any source (kept):\n");
         reportGroups(STDERR, 'stale', $removed);
@@ -423,13 +431,17 @@ function locateIconsSpan(string $source): ?array
     return null;
 }
 
-// Rewrite only the `icons` array, leaving the rest of the file (comments, header,
-// any other keys, dynamic values) untouched. A fresh file gets a minimal stub.
-$iconsBlock = "'icons' => ".exportPhp($merged, 1);
+/**
+ * Build the would-be config file: the icons array spliced into (or inserted into)
+ * the existing file, or a minimal stub when no file exists. Aborts on a file that
+ * can't be read or has no `return [` array.
+ */
+function buildConfigContents(string $configFile, string $iconsBlock): string
+{
+    if (! is_file($configFile)) {
+        return "<?php\n\n// config for Onelegstudios/Tailor\nreturn [\n    {$iconsBlock},\n];\n";
+    }
 
-if (! is_file($configFile)) {
-    $contents = "<?php\n\n// config for Onelegstudios/Tailor\nreturn [\n    {$iconsBlock},\n];\n";
-} else {
     $original = file_get_contents($configFile);
 
     if ($original === false) {
@@ -439,15 +451,18 @@ if (! is_file($configFile)) {
 
     if (($span = locateIconsSpan($original)) !== null) {
         // Replace the existing icons array in place.
-        $contents = substr_replace($original, $iconsBlock, $span[0], $span[1]);
-    } elseif (preg_match('/\breturn\s*\[/', $original, $m, PREG_OFFSET_CAPTURE) === 1) {
+        return substr_replace($original, $iconsBlock, $span[0], $span[1]);
+    }
+
+    if (preg_match('/\breturn\s*\[/', $original, $m, PREG_OFFSET_CAPTURE) === 1) {
         // No icons key yet: insert one at the top of the returned array.
         $at = $m[0][1] + strlen($m[0][0]);
-        $contents = substr_replace($original, "\n    {$iconsBlock},", $at, 0);
-    } else {
-        fwrite(STDERR, "Could not find a 'return [' array in {$configFile} to update.\n");
-        exit(1);
+
+        return substr_replace($original, "\n    {$iconsBlock},", $at, 0);
     }
+
+    fwrite(STDERR, "Could not find a 'return [' array in {$configFile} to update.\n");
+    exit(1);
 }
 
 // Write atomically: a temp file in the same dir, then rename into place, so an
