@@ -165,8 +165,9 @@ function scanIcons(array $files): array
         }
 
         // icon="trash"  icon:trailing="chevron-down"  icon:leading="plus"
-        // (deliberately excludes icon:variant="outline" and other attributes)
-        if (preg_match_all('/\bicon(?::(?:trailing|leading))?=([\'"])([a-z0-9-]+)\1/', $contents, $m) > 0) {
+        // (deliberately excludes icon:variant="outline" and other attributes).
+        // Lookbehind rejects a leading name char so data-icon="x" doesn't match.
+        if (preg_match_all('/(?<![\w-])icon(?::(?:trailing|leading))?=([\'"])([a-z0-9-]+)\1/', $contents, $m) > 0) {
             foreach ($m[2] as $name) {
                 $found[$name] = true;
             }
