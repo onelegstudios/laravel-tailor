@@ -385,7 +385,14 @@ function exportPhp(mixed $value, int $depth): string
 
 $contents = "<?php\n\n// config for Onelegstudios/Tailor\nreturn ".exportPhp($config, 0).";\n";
 
-file_put_contents($configFile, $contents);
+// Write atomically: a temp file in the same dir, then rename into place, so an
+// interrupted or failed write can never leave config/tailor.php truncated.
+$tmpFile = $configFile.'.tmp';
+if (file_put_contents($tmpFile, $contents) === false || ! rename($tmpFile, $configFile)) {
+    @unlink($tmpFile);
+    fwrite(STDERR, "Failed to write {$configFile}.\n");
+    exit(1);
+}
 
 reportGroups(STDOUT, 'added', $added);
 
