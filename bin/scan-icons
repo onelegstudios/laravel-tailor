@@ -156,17 +156,18 @@ function scanIcons(array $files): array
             }
         }
 
-        // <flux:icon name="loading" /> (name attr; dynamic "{{ $icon }}" excluded)
-        if (preg_match_all('/<flux:icon\b[^>]*\bname="([a-z0-9-]+)"/', $contents, $m) > 0) {
-            foreach ($m[1] as $name) {
+        // <flux:icon name="loading" /> (name attr; dynamic "{{ $icon }}" excluded).
+        // Quote group is backreferenced so single- and double-quoted attrs match.
+        if (preg_match_all('/<flux:icon\b[^>]*\bname=([\'"])([a-z0-9-]+)\1/', $contents, $m) > 0) {
+            foreach ($m[2] as $name) {
                 $found[$name] = true;
             }
         }
 
         // icon="trash"  icon:trailing="chevron-down"  icon:leading="plus"
         // (deliberately excludes icon:variant="outline" and other attributes)
-        if (preg_match_all('/\bicon(?::(?:trailing|leading))?="([a-z0-9-]+)"/', $contents, $m) > 0) {
-            foreach ($m[1] as $name) {
+        if (preg_match_all('/\bicon(?::(?:trailing|leading))?=([\'"])([a-z0-9-]+)\1/', $contents, $m) > 0) {
+            foreach ($m[2] as $name) {
                 $found[$name] = true;
             }
         }
@@ -429,14 +430,23 @@ if (! is_file($configFile)) {
     $contents = "<?php\n\n// config for Onelegstudios/Tailor\nreturn [\n    {$iconsBlock},\n];\n";
 } else {
     $original = file_get_contents($configFile);
-    $span = $original === false ? null : locateIconsSpan($original);
 
-    if ($span === null) {
-        fwrite(STDERR, "Could not locate the 'icons' key in {$configFile}; aborting to avoid clobbering it.\n");
+    if ($original === false) {
+        fwrite(STDERR, "Could not read {$configFile}.\n");
         exit(1);
     }
 
-    $contents = substr_replace($original, $iconsBlock, $span[0], $span[1]);
+    if (($span = locateIconsSpan($original)) !== null) {
+        // Replace the existing icons array in place.
+        $contents = substr_replace($original, $iconsBlock, $span[0], $span[1]);
+    } elseif (preg_match('/\breturn\s*\[/', $original, $m, PREG_OFFSET_CAPTURE) === 1) {
+        // No icons key yet: insert one at the top of the returned array.
+        $at = $m[0][1] + strlen($m[0][0]);
+        $contents = substr_replace($original, "\n    {$iconsBlock},", $at, 0);
+    } else {
+        fwrite(STDERR, "Could not find a 'return [' array in {$configFile} to update.\n");
+        exit(1);
+    }
 }
 
 // Write atomically: a temp file in the same dir, then rename into place, so an
