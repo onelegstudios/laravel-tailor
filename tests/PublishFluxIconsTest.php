@@ -39,7 +39,7 @@ it('returns no replacements when there are no flux icons', function () {
     expect($this->action->replacements([], []))->toBe([]);
 });
 
-it('aliases a downloaded icon under its original Flux name', function () {
+it('renames a downloaded icon to its original Flux name', function () {
     ($this->download)('pipette');
 
     $this->action->applyAliases($this->tempDir, ['eye-dropper' => 'pipette'], []);
@@ -49,6 +49,24 @@ it('aliases a downloaded icon under its original Flux name', function () {
     // The alias carries the downloaded Lucide glyph (pipette), not the original.
     expect(file_get_contents($this->tempDir.'/eye-dropper.blade.php'))
         ->toContain('data-icon="pipette"');
+
+    // Flux only references the original name, so the Lucide-named source is gone.
+    expect(file_exists($this->tempDir.'/pipette.blade.php'))->toBeFalse();
+});
+
+it('keeps the Lucide-named source when it must be preserved', function () {
+    ($this->download)('chevrons-up-down');
+
+    // A starter-kit icon references chevrons-up-down by that name, so it stays.
+    $this->action->applyAliases(
+        $this->tempDir,
+        ['chevron-up-down' => 'chevrons-up-down'],
+        [],
+        ['chevrons-up-down'],
+    );
+
+    expect(file_exists($this->tempDir.'/chevron-up-down.blade.php'))->toBeTrue();
+    expect(file_exists($this->tempDir.'/chevrons-up-down.blade.php'))->toBeTrue();
 });
 
 it('does not alias an icon that never downloaded', function () {
@@ -73,16 +91,13 @@ it('adds a Tailwind animation class to animated icon aliases', function () {
     $this->action->applyAliases($this->tempDir, [], ['loading' => 'loader-circle']);
 
     $alias = file_get_contents($this->tempDir.'/loading.blade.php');
-    $source = file_get_contents($this->tempDir.'/loader-circle.blade.php');
 
     expect($alias)
         ->toContain('data-icon="loader-circle"')
         ->toContain("Flux::classes('shrink-0 animate-spin')");
 
-    // The downloaded static icon stays un-animated.
-    expect($source)
-        ->toContain("Flux::classes('shrink-0')")
-        ->not->toContain('animate-spin');
+    // The animated alias replaces the source rather than duplicating it.
+    expect(file_exists($this->tempDir.'/loader-circle.blade.php'))->toBeFalse();
 });
 
 it('does nothing when there are no flux icons to alias', function () {

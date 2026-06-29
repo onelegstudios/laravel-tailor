@@ -34,27 +34,36 @@ class PublishFluxIcons
      * internal references keep resolving. Animated icons get a Tailwind animation
      * class on the alias.
      *
+     * Flux icons are only referenced internally, by their original name, so the
+     * downloaded Lucide glyph is renamed rather than copied — unless its Lucide
+     * name is also needed directly (a $preserve entry), in which case both the
+     * original-named alias and the Lucide-named source are kept.
+     *
      * @param  array<string, string>  $normal  original Flux icon name => Lucide replacement
      * @param  array<string, string>  $animated  original animated icon name => Lucide replacement
+     * @param  array<int, string>  $preserve  Lucide names that must stay on disk under their own name
      */
-    public function applyAliases(string $iconPath, array $normal, array $animated): void
+    public function applyAliases(string $iconPath, array $normal, array $animated, array $preserve = []): void
     {
         foreach ($normal as $original => $replacement) {
-            $this->alias($iconPath, $replacement, $original);
+            $this->alias($iconPath, $replacement, $original, $preserve);
         }
 
         foreach ($animated as $original => $replacement) {
-            $this->alias($iconPath, $replacement, $original, animate: true);
+            $this->alias($iconPath, $replacement, $original, $preserve, animate: true);
         }
     }
 
     /**
-     * Copy the downloaded $replacement icon to a blade named after $original so
+     * Write the downloaded $replacement icon to a blade named after $original so
      * Flux's internal components (which reference the original name) resolve to
      * the Lucide glyph. When $animate is set, a Tailwind animation class is added
-     * to the copy so it keeps moving.
+     * so it keeps moving. The Lucide-named source is removed afterwards unless it
+     * is listed in $preserve (something else references it by that name).
+     *
+     * @param  array<int, string>  $preserve
      */
-    private function alias(string $iconPath, string $replacement, string $original, bool $animate = false): void
+    private function alias(string $iconPath, string $replacement, string $original, array $preserve, bool $animate = false): void
     {
         if ($replacement === '') {
             return;
@@ -79,6 +88,12 @@ class PublishFluxIcons
         }
 
         $this->files->put($iconPath.'/'.$original.'.blade.php', $contents);
+
+        // Rename rather than duplicate: drop the redundant Lucide-named copy
+        // once it serves no purpose of its own.
+        if ($original !== $replacement && ! in_array($replacement, $preserve, true)) {
+            $this->files->delete($source);
+        }
     }
 
     /**

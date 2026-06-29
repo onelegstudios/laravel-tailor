@@ -66,7 +66,10 @@ class TailorCommand extends Command
 
             $publishLucideIcons->execute($iconPath, $icons, $this->output);
 
-            $publishFluxIcons->applyAliases($iconPath, $normal, $animated);
+            // Starter-kit glyphs are referenced directly by their Lucide name, so
+            // they must survive the Flux aliasing pass even when a Flux icon shares
+            // the same replacement.
+            $publishFluxIcons->applyAliases($iconPath, $normal, $animated, array_values($map));
         }
 
         outro('All done! Your starter kit has been tailored.');
