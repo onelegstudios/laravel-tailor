@@ -14,7 +14,7 @@ use function Laravel\Prompts\select;
 
 class TailorCommand extends Command
 {
-    public $signature = 'tailor';
+    public $signature = 'tailor {--ui-kit= : The UI kit to tailor to (hero, lucide, tall-stack); prompts when omitted}';
 
     public $description = 'Tailor the livewire starter kit to your needs';
 
@@ -25,16 +25,26 @@ class TailorCommand extends Command
     ): int {
         intro('Welcome to Tailor — let\'s customize your starter kit.');
 
-        $uikit = select(
-            label: 'What UI kit do you want to use?',
-            options: [
-                'hero' => 'Flux with Heroicons',
-                'lucide' => 'Flux with Lucide Icons',
-                'tall-stack' => 'Tall Stack UI',
-            ],
-            default: 'hero',
-            hint: 'Use the arrow keys to choose, enter to tailor.',
-        );
+        $uikits = [
+            'hero' => 'Flux with Heroicons',
+            'lucide' => 'Flux with Lucide Icons',
+            'tall-stack' => 'Tall Stack UI',
+        ];
+
+        $uikit = $this->option('ui-kit');
+
+        if ($uikit === null) {
+            $uikit = select(
+                label: 'What UI kit do you want to use?',
+                options: $uikits,
+                default: 'hero',
+                hint: 'Use the arrow keys to choose, enter to tailor.',
+            );
+        } elseif (! array_key_exists($uikit, $uikits)) {
+            $this->error("Unknown UI kit [{$uikit}]. Choose one of: ".implode(', ', array_keys($uikits)).'.');
+
+            return self::FAILURE;
+        }
 
         $options = multiselect(
             label: 'What else would you like to tailor?',

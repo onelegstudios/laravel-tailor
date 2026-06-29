@@ -91,6 +91,23 @@ it('downloads the Flux internal icons when the Lucide kit is selected', function
         ->and(RecordingFluxIconCommand::$received)->toBe(['pipette', 'loader-circle']);
 });
 
+it('uses the --ui-kit option instead of prompting for the UI kit', function () {
+    $this->artisan('tailor', ['--ui-kit' => 'hero'])
+        ->expectsChoice('What else would you like to tailor?', [], [
+            'move_auth' => 'Move the auth folder',
+        ])
+        ->assertSuccessful();
+
+    expect(RecordingFluxIconCommand::$calls)->toBe(0);
+});
+
+it('fails when given an unknown --ui-kit', function () {
+    $this->artisan('tailor', ['--ui-kit' => 'bogus'])
+        ->assertFailed();
+
+    expect(RecordingFluxIconCommand::$calls)->toBe(0);
+});
+
 it('fails when an icon cannot be downloaded', function () {
     config()->set('tailor.icons', [
         'starter-kit' => [
