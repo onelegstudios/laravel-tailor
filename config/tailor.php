@@ -34,7 +34,7 @@ return [
                 'x-mark' => 'x',
             ],
             'lucide' => [
-                'book-open-text' => 'file-text',
+                'book-open-text' => 'book-open-text',
                 'chevrons-up-down' => 'chevrons-up-down',
                 'folder-git-2' => 'folder-git-2',
                 'layout-grid' => 'layout-dashboard',
