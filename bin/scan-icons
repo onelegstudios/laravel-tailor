@@ -239,6 +239,11 @@ $normal = array_filter(
 
 $config = is_file($configFile) ? require $configFile : [];
 
+if (! is_array($config)) {
+    fwrite(STDERR, "Expected {$configFile} to return an array.\n");
+    exit(1);
+}
+
 // Icons are stored as associative arrays keyed by the icon name, with the value
 // reserved for its equivalent in the target UI kit (empty for now).
 $existingIcons = $config['icons'] ?? [];
