@@ -1,7 +1,26 @@
 <?php
 
+use Onelegstudios\Tailor\Kits\HeroKit;
+use Onelegstudios\Tailor\Kits\LucideKit;
+use Onelegstudios\Tailor\Kits\TallStackKit;
+use Onelegstudios\Tailor\Tasks\MoveAuth;
+
 // config for Onelegstudios/Tailor
 return [
+    // Mutually exclusive UI kits, in the order they are offered. Add a kit by
+    // implementing Onelegstudios\Tailor\Kits\UiKit and listing it here.
+    'kits' => [
+        HeroKit::class,
+        LucideKit::class,
+        TallStackKit::class,
+    ],
+
+    // Independent tailoring tasks offered alongside the UI kit. Add a task by
+    // implementing Onelegstudios\Tailor\Tasks\TailorTask and listing it here.
+    'tasks' => [
+        MoveAuth::class,
+    ],
+
     'icons' => [
         'starter-kit' => [
             'heroicons' => [

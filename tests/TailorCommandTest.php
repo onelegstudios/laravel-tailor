@@ -23,8 +23,8 @@ it('asks about the UI kit first, then the remaining options', function () {
             'lucide' => 'Flux with Lucide Icons',
             'tall-stack' => 'Tall Stack UI',
         ])
-        ->expectsChoice('What else would you like to tailor?', ['move_auth'], [
-            'move_auth' => 'Move the auth folder',
+        ->expectsChoice('What else would you like to tailor?', ['move-auth'], [
+            'move-auth' => 'Move the auth folder',
         ])
         ->assertSuccessful();
 });
@@ -37,7 +37,7 @@ it('defaults the UI kit to Flux with Heroicons', function () {
             'tall-stack' => 'Tall Stack UI',
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
-            'move_auth' => 'Move the auth folder',
+            'move-auth' => 'Move the auth folder',
         ])
         ->assertSuccessful();
 });
@@ -58,7 +58,7 @@ it('downloads the starter-kit Lucide icons when the Lucide kit is selected', fun
             'tall-stack' => 'Tall Stack UI',
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
-            'move_auth' => 'Move the auth folder',
+            'move-auth' => 'Move the auth folder',
         ])
         ->assertSuccessful();
 
@@ -83,7 +83,7 @@ it('downloads the Flux internal icons when the Lucide kit is selected', function
             'tall-stack' => 'Tall Stack UI',
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
-            'move_auth' => 'Move the auth folder',
+            'move-auth' => 'Move the auth folder',
         ])
         ->assertSuccessful();
 
@@ -94,7 +94,7 @@ it('downloads the Flux internal icons when the Lucide kit is selected', function
 it('uses the --ui-kit option instead of prompting for the UI kit', function () {
     $this->artisan('tailor', ['--ui-kit' => 'hero'])
         ->expectsChoice('What else would you like to tailor?', [], [
-            'move_auth' => 'Move the auth folder',
+            'move-auth' => 'Move the auth folder',
         ])
         ->assertSuccessful();
 
@@ -126,7 +126,7 @@ it('fails when an icon cannot be downloaded', function () {
             'tall-stack' => 'Tall Stack UI',
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
-            'move_auth' => 'Move the auth folder',
+            'move-auth' => 'Move the auth folder',
         ])
         ->assertFailed();
 });
@@ -139,7 +139,7 @@ it('does not touch icons when the Heroicons kit is selected', function () {
             'tall-stack' => 'Tall Stack UI',
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
-            'move_auth' => 'Move the auth folder',
+            'move-auth' => 'Move the auth folder',
         ])
         ->assertSuccessful();
 
