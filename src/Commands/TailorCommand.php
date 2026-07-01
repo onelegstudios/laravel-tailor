@@ -4,6 +4,7 @@ namespace Onelegstudios\Tailor\Commands;
 
 use Illuminate\Console\Command;
 use Onelegstudios\Tailor\Kits\UiKit;
+use Onelegstudios\Tailor\Registry;
 use Onelegstudios\Tailor\Tasks\TailorTask;
 
 use function Laravel\Prompts\intro;
@@ -17,12 +18,12 @@ class TailorCommand extends Command
 
     public $description = 'Tailor the livewire starter kit to your needs';
 
-    public function handle(): int
+    public function handle(Registry $registry): int
     {
         intro('Welcome to Tailor — let\'s customize your starter kit.');
 
-        $kits = $this->resolve(config('tailor.kits', []));
-        $tasks = $this->resolve(config('tailor.tasks', []));
+        $kits = $registry->resolve(config('tailor.kits', []), config('tailor.overrides.kits', ''), UiKit::class);
+        $tasks = $registry->resolve(config('tailor.tasks', []), config('tailor.overrides.tasks', ''), TailorTask::class);
 
         $uikit = $this->option('ui-kit');
 
@@ -60,26 +61,5 @@ class TailorCommand extends Command
         outro('All done! Your starter kit has been tailored.');
 
         return self::SUCCESS;
-    }
-
-    /**
-     * Instantiate each registered kit/task and key it by its identifier so the
-     * prompts and dispatch can look it up by the value the user chose.
-     *
-     * @param  array<int, class-string>  $classes
-     * @return array<string, UiKit|TailorTask>
-     */
-    private function resolve(array $classes): array
-    {
-        $resolved = [];
-
-        foreach ($classes as $class) {
-            /** @var UiKit|TailorTask $instance */
-            $instance = app($class);
-
-            $resolved[$instance->key()] = $instance;
-        }
-
-        return $resolved;
     }
 }

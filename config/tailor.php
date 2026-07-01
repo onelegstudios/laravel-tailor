@@ -21,6 +21,14 @@ return [
         MoveAuth::class,
     ],
 
+    // App namespaces checked for overrides. A class here with the same short
+    // name as a registered kit/task (e.g. app/Tailor/Kits/LucideKit.php) runs
+    // instead of the package's, with no change to the lists above.
+    'overrides' => [
+        'kits' => 'App\\Tailor\\Kits',
+        'tasks' => 'App\\Tailor\\Tasks',
+    ],
+
     'icons' => [
         'starter-kit' => [
             'heroicons' => [
