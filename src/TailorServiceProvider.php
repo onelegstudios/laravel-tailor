@@ -3,6 +3,8 @@
 namespace Onelegstudios\Tailor;
 
 use Livewire\Livewire;
+use Onelegstudios\Tailor\Commands\MakeKitCommand;
+use Onelegstudios\Tailor\Commands\MakeTaskCommand;
 use Onelegstudios\Tailor\Commands\TailorCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -21,7 +23,11 @@ class TailorServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasViews()
             ->hasMigration('create_laravel_tailor_table')
-            ->hasCommand(TailorCommand::class);
+            ->hasCommands([
+                TailorCommand::class,
+                MakeKitCommand::class,
+                MakeTaskCommand::class,
+            ]);
     }
 
     public function packageBooted(): void

@@ -1,0 +1,37 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Console\OutputStyle;
+use Onelegstudios\Tailor\Kits\UiKit;
+
+class {{ class }} implements UiKit
+{
+    /**
+     * The stable kebab-case identifier — the config key and the --ui-kit value.
+     */
+    public function key(): string
+    {
+        return '{{ key }}';
+    }
+
+    /**
+     * The label shown in the UI kit prompt.
+     */
+    public function label(): string
+    {
+        return '{{ class }}';
+    }
+
+    /**
+     * Apply the kit to the starter kit.
+     *
+     * @return array<int, string> items that could not be applied
+     */
+    public function apply(?OutputStyle $output = null): array
+    {
+        //
+
+        return [];
+    }
+}
