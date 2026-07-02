@@ -12,6 +12,11 @@ trait DownloadsIcons
      * Download each icon via Flux's flux:icon command, reporting progress as it
      * goes and warning about any icon that did not end up on disk.
      *
+     * Icons are fetched one flux:icon call at a time on purpose. The command
+     * accepts a batch, but per-icon calls give us a progress line and a
+     * pass/fail result for each glyph — flux:icon fetches sequentially either
+     * way, so this costs no extra network round trips.
+     *
      * @param  array<int, string>  $icons
      * @return array<int, string> the icons that failed to download
      */
