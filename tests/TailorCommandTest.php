@@ -131,6 +131,37 @@ it('fails when an icon cannot be downloaded', function () {
         ->assertFailed();
 });
 
+it('skips the UI kit prompt and drops "else" when no kits are configured', function () {
+    config()->set('tailor.kits', []);
+
+    $this->artisan('tailor')
+        ->expectsChoice('What would you like to tailor?', [], [
+            'move-auth' => 'Move the auth folder',
+        ])
+        ->assertSuccessful();
+});
+
+it('skips the task prompt when no tasks are configured', function () {
+    config()->set('tailor.tasks', []);
+
+    $this->artisan('tailor')
+        ->expectsChoice('What UI kit do you want to use?', 'hero', [
+            'hero' => 'Flux with Heroicons',
+            'lucide' => 'Flux with Lucide Icons',
+            'tall-stack' => 'Tall Stack UI',
+        ])
+        ->assertSuccessful();
+});
+
+it('warns and does nothing when neither kits nor tasks are configured', function () {
+    config()->set('tailor.kits', []);
+    config()->set('tailor.tasks', []);
+
+    $this->artisan('tailor')
+        ->expectsOutputToContain('nothing to tailor')
+        ->assertSuccessful();
+});
+
 it('does not touch icons when the Heroicons kit is selected', function () {
     $this->artisan('tailor')
         ->expectsChoice('What UI kit do you want to use?', 'hero', [

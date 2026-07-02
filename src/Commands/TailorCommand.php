@@ -11,6 +11,7 @@ use function Laravel\Prompts\intro;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\outro;
 use function Laravel\Prompts\select;
+use function Laravel\Prompts\warning;
 
 class TailorCommand extends Command
 {
@@ -25,28 +26,46 @@ class TailorCommand extends Command
         $kits = $registry->resolve(config('tailor.kits', []), config('tailor.overrides.kits', ''), UiKit::class);
         $tasks = $registry->resolve(config('tailor.tasks', []), config('tailor.overrides.tasks', ''), TailorTask::class);
 
-        $uikit = $this->option('ui-kit');
+        if ($kits === [] && $tasks === []) {
+            warning('There is nothing to tailor — no UI kits or tasks are configured.');
 
-        if ($uikit === null) {
-            $uikit = select(
-                label: 'What UI kit do you want to use?',
-                options: array_map(fn ($kit) => $kit->label(), $kits),
-                default: 'hero',
-                hint: 'Use the arrow keys to choose, enter to tailor.',
-            );
-        } elseif (! isset($kits[$uikit])) {
-            $this->error("Unknown UI kit [{$uikit}]. Choose one of: ".implode(', ', array_keys($kits)).'.');
-
-            return self::FAILURE;
+            return self::SUCCESS;
         }
 
-        $selected = multiselect(
-            label: 'What else would you like to tailor?',
-            options: array_map(fn ($task) => $task->label(), $tasks),
-            hint: 'Use space to select, enter to confirm.',
-        );
+        $uikit = null;
 
-        $failed = $kits[$uikit]->apply($this->output);
+        if ($kits !== []) {
+            $uikit = $this->option('ui-kit');
+
+            if ($uikit === null) {
+                $uikit = select(
+                    label: 'What UI kit do you want to use?',
+                    options: array_map(fn ($kit) => $kit->label(), $kits),
+                    default: 'hero',
+                    hint: 'Use the arrow keys to choose, enter to tailor.',
+                );
+            } elseif (! isset($kits[$uikit])) {
+                $this->error("Unknown UI kit [{$uikit}]. Choose one of: ".implode(', ', array_keys($kits)).'.');
+
+                return self::FAILURE;
+            }
+        }
+
+        $selected = [];
+
+        if ($tasks !== []) {
+            $selected = multiselect(
+                label: $kits === [] ? 'What would you like to tailor?' : 'What else would you like to tailor?',
+                options: array_map(fn ($task) => $task->label(), $tasks),
+                hint: 'Use space to select, enter to confirm.',
+            );
+        }
+
+        $failed = [];
+
+        if ($uikit !== null) {
+            $failed = $kits[$uikit]->apply($this->output);
+        }
 
         foreach ($selected as $key) {
             $tasks[$key]->apply($this->output);
