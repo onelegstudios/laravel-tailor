@@ -73,6 +73,25 @@ it('does not rewrite the views when an icon fails to download', function () {
     app(LucideKit::class)->apply();
 });
 
+it('ignores a malformed starter-kit config entry instead of erroring', function () {
+    config()->set('tailor.icons', [
+        'starter-kit' => [
+            'heroicons' => ['home' => 'house'],
+            'lucide' => ['layout-grid' => 'layout-dashboard'],
+            'note' => 'not-an-array',
+        ],
+        'flux' => ['normal' => [], 'animated' => []],
+    ]);
+
+    $replaceHeroicons = Mockery::mock(ReplaceHeroicons::class);
+    $replaceHeroicons->shouldReceive('execute')
+        ->once()
+        ->with(resource_path('views'), ['home' => 'house', 'layout-grid' => 'layout-dashboard']);
+    $this->app->instance(ReplaceHeroicons::class, $replaceHeroicons);
+
+    app(LucideKit::class)->apply();
+});
+
 it('does not alias flux icons when an icon fails to download', function () {
     config()->set('tailor.icons', [
         'starter-kit' => ['heroicons' => ['home' => 'house'], 'lucide' => []],
