@@ -2,6 +2,7 @@
 
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Filesystem\Filesystem;
+use Onelegstudios\Tailor\Actions\PublishFluxIcons;
 use Onelegstudios\Tailor\Actions\ReplaceHeroicons;
 use Onelegstudios\Tailor\Kits\LucideKit;
 use Onelegstudios\Tailor\Tests\Stubs\RecordingFluxIconCommand;
@@ -68,6 +69,22 @@ it('does not rewrite the views when an icon fails to download', function () {
     $replaceHeroicons = Mockery::mock(ReplaceHeroicons::class);
     $replaceHeroicons->shouldNotReceive('execute');
     $this->app->instance(ReplaceHeroicons::class, $replaceHeroicons);
+
+    app(LucideKit::class)->apply();
+});
+
+it('does not alias flux icons when an icon fails to download', function () {
+    config()->set('tailor.icons', [
+        'starter-kit' => ['heroicons' => ['home' => 'house'], 'lucide' => []],
+        'flux' => ['normal' => [], 'animated' => []],
+    ]);
+
+    RecordingFluxIconCommand::$fail = ['house'];
+
+    $publishFluxIcons = Mockery::mock(PublishFluxIcons::class);
+    $publishFluxIcons->shouldReceive('replacements')->andReturn([]);
+    $publishFluxIcons->shouldNotReceive('applyAliases');
+    $this->app->instance(PublishFluxIcons::class, $publishFluxIcons);
 
     app(LucideKit::class)->apply();
 });
