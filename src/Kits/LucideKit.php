@@ -36,8 +36,6 @@ class LucideKit implements UiKit
         $starterKit = config('tailor.icons.starter-kit', []);
         $map = array_merge(...array_values($starterKit));
 
-        $this->replaceHeroicons->execute(resource_path('views'), $map);
-
         $flux = config('tailor.icons.flux', []);
         $normal = $flux['normal'] ?? [];
         $animated = $flux['animated'] ?? [];
@@ -51,6 +49,13 @@ class LucideKit implements UiKit
         ];
 
         $failed = $this->publishLucideIcons->execute($iconPath, $icons, $output);
+
+        // Only rewrite the starter kit's blades once every icon is on disk, so a
+        // failed download never leaves the views pointing at Lucide glyphs that
+        // were never published.
+        if ($failed === []) {
+            $this->replaceHeroicons->execute(resource_path('views'), $map);
+        }
 
         // Starter-kit glyphs are referenced directly by their Lucide name, so
         // they must survive the Flux aliasing pass even when a Flux icon shares

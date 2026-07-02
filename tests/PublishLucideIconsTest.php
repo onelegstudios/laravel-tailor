@@ -50,6 +50,19 @@ it('leaves the existing icons in place when a download fails', function () {
         ->and(file_exists($this->tempDir.'/layout-grid.blade.php'))->toBeTrue();
 });
 
+it('reports a failed download even when a stale blade of the same name exists', function () {
+    RecordingFluxIconCommand::$targetDir = $this->tempDir;
+    RecordingFluxIconCommand::$fail = ['house'];
+
+    // Leftover from a previous run — it must not mask this run's failed fetch.
+    file_put_contents($this->tempDir.'/house.blade.php', 'stale');
+
+    $failed = $this->action->execute($this->tempDir, ['house']);
+
+    expect($failed)->toBe(['house'])
+        ->and(file_exists($this->tempDir.'/house.blade.php'))->toBeFalse();
+});
+
 it('downloads the deduped, non-empty icon set via flux:icon', function () {
     $this->action->execute($this->tempDir, ['house', 'search', 'house', '', 'file-text']);
 

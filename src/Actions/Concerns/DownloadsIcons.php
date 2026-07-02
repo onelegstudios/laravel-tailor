@@ -29,9 +29,18 @@ trait DownloadsIcons
         $failed = [];
 
         foreach ($icons as $index => $icon) {
+            $target = $iconPath.'/'.$icon.'.blade.php';
+
+            // Clear any existing blade first so the post-download check reflects
+            // this run alone. flux:icon leaves the old file in place when a fetch
+            // fails, which would otherwise let a stale copy mask the failure.
+            if ($this->files->exists($target)) {
+                $this->files->delete($target);
+            }
+
             Artisan::call('flux:icon', ['icons' => [$icon]], new NullOutput);
 
-            $downloaded = $this->files->exists($iconPath.'/'.$icon.'.blade.php');
+            $downloaded = $this->files->exists($target);
 
             if (! $downloaded) {
                 $failed[] = $icon;

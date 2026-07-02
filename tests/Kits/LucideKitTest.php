@@ -2,6 +2,7 @@
 
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Filesystem\Filesystem;
+use Onelegstudios\Tailor\Actions\ReplaceHeroicons;
 use Onelegstudios\Tailor\Kits\LucideKit;
 use Onelegstudios\Tailor\Tests\Stubs\RecordingFluxIconCommand;
 
@@ -54,4 +55,34 @@ it('returns the icons that failed to download', function () {
     $failed = app(LucideKit::class)->apply();
 
     expect($failed)->toBe(['house']);
+});
+
+it('does not rewrite the views when an icon fails to download', function () {
+    config()->set('tailor.icons', [
+        'starter-kit' => ['heroicons' => ['home' => 'house'], 'lucide' => []],
+        'flux' => ['normal' => [], 'animated' => []],
+    ]);
+
+    RecordingFluxIconCommand::$fail = ['house'];
+
+    $replaceHeroicons = Mockery::mock(ReplaceHeroicons::class);
+    $replaceHeroicons->shouldNotReceive('execute');
+    $this->app->instance(ReplaceHeroicons::class, $replaceHeroicons);
+
+    app(LucideKit::class)->apply();
+});
+
+it('rewrites the views once every icon has downloaded', function () {
+    config()->set('tailor.icons', [
+        'starter-kit' => ['heroicons' => ['home' => 'house'], 'lucide' => []],
+        'flux' => ['normal' => [], 'animated' => []],
+    ]);
+
+    $replaceHeroicons = Mockery::mock(ReplaceHeroicons::class);
+    $replaceHeroicons->shouldReceive('execute')
+        ->once()
+        ->with(resource_path('views'), ['home' => 'house']);
+    $this->app->instance(ReplaceHeroicons::class, $replaceHeroicons);
+
+    app(LucideKit::class)->apply();
 });
