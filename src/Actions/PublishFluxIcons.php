@@ -98,13 +98,30 @@ class PublishFluxIcons
 
     /**
      * Inject the Tailwind animation utility into the icon's base Flux classes.
+     *
+     * Appends the class to whatever literal Flux::classes('...') call the icon
+     * blade defines, rather than matching one exact base class, so it survives
+     * Flux tweaking the generated stub. If no such call is found the icon can't
+     * be animated, so fail loudly instead of shipping a silently static glyph.
+     *
+     * @throws \RuntimeException when the blade has no Flux::classes('...') call to extend
      */
     private function addAnimation(string $contents): string
     {
-        return str_replace(
-            "Flux::classes('shrink-0')",
-            "Flux::classes('shrink-0 ".self::ANIMATION_CLASS."')",
+        $updated = preg_replace(
+            "/Flux::classes\('([^']*)'\)/",
+            "Flux::classes('\$1 ".self::ANIMATION_CLASS."')",
             $contents,
+            1,
+            $count,
         );
+
+        if ($count === 0) {
+            throw new \RuntimeException(
+                "Unable to animate icon: no Flux::classes('...') call found to add '".self::ANIMATION_CLASS."' to.",
+            );
+        }
+
+        return $updated;
     }
 }

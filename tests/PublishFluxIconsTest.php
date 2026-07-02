@@ -100,6 +100,28 @@ it('adds a Tailwind animation class to animated icon aliases', function () {
     expect(file_exists($this->tempDir.'/loader-circle.blade.php'))->toBeFalse();
 });
 
+it('animates whatever base Flux classes the icon blade defines', function () {
+    file_put_contents(
+        $this->tempDir.'/loader-circle.blade.php',
+        "@php \$classes = Flux::classes('size-6')->add('text-current'); @endphp",
+    );
+
+    $this->action->applyAliases($this->tempDir, [], ['loading' => 'loader-circle']);
+
+    expect(file_get_contents($this->tempDir.'/loading.blade.php'))
+        ->toContain("Flux::classes('size-6 animate-spin')");
+});
+
+it('fails loudly when an animated icon has no Flux classes to extend', function () {
+    file_put_contents(
+        $this->tempDir.'/loader-circle.blade.php',
+        '<svg data-icon="loader-circle"></svg>',
+    );
+
+    expect(fn () => $this->action->applyAliases($this->tempDir, [], ['loading' => 'loader-circle']))
+        ->toThrow(RuntimeException::class);
+});
+
 it('does nothing when there are no flux icons to alias', function () {
     $this->action->applyAliases($this->tempDir, [], []);
 
