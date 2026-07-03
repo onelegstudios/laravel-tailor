@@ -1,6 +1,11 @@
 # Path-based git attributes
 # https://www.kernel.org/pub/software/scm/git/docs/gitattributes.html
 
+# Keep config/tailor.php as LF so bin/scan-icons' generated output (always LF)
+# byte-matches the checked-out file on Windows, where git would otherwise use
+# CRLF and make the sync/--check comparison report false drift.
+/config/tailor.php  text eol=lf
+
 # Ignore all test and documentation with "export-ignore".
 /.github            export-ignore
 /.gitattributes     export-ignore
