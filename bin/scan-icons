@@ -127,6 +127,11 @@ function collectFiles(string $dir): array
         }
     }
 
+    // Sort for a deterministic scan order across platforms — RecursiveDirectory-
+    // Iterator yields entries in filesystem-dependent order, which would otherwise
+    // make the generated icon order (and the config it produces) differ per OS.
+    sort($files);
+
     return $files;
 }
 
