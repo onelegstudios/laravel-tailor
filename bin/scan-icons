@@ -118,7 +118,10 @@ function collectFiles(string $dir): array
         $name = $file->getFilename();
         foreach ($allowed as $ext) {
             if (str_ends_with($name, '.'.$ext)) {
-                $files[] = $file->getPathname();
+                // Normalise to forward slashes so downstream path matching (the
+                // /flux/icon/ checks) works on Windows, where the iterator yields
+                // backslash-separated paths.
+                $files[] = str_replace('\\', '/', $file->getPathname());
                 break;
             }
         }
