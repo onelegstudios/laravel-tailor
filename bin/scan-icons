@@ -9,7 +9,7 @@
  * UI kit. The `icons` key has two groups, each with two sub-groups:
  *
  *   starter-kit          — icons the app's own views use (scanned from
- *                          tests/fixtures):
+ *                          tests/Fixtures):
  *       heroicons        — Flux's default Heroicons.
  *       lucide           — names the starter kit ships as local overrides (blade
  *                          files under resources/views/flux/icon/, from lucide.dev).
@@ -62,7 +62,7 @@
 const ANIMATED_ICONS = ['loading'];
 
 $root = dirname(__DIR__);
-$fixturesDir = $root.'/tests/fixtures';
+$fixturesDir = $root.'/tests/Fixtures';
 $configFile = $root.'/config/tailor.php';
 
 $flags = array_slice($argv, 1);

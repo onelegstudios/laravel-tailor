@@ -14,7 +14,7 @@ set -euo pipefail
 REPO="laravel/livewire-starter-kit"
 BRANCHES=("main" "components" "teams")
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-DEST="$ROOT/tests/fixtures/starter-kits"
+DEST="$ROOT/tests/Fixtures/starter-kits"
 
 # Build into a temp dir first, then swap it into place only once every branch
 # has downloaded cleanly. This keeps the existing fixtures intact if any
@@ -47,7 +47,7 @@ for branch in "${BRANCHES[@]}"; do
 done
 
 # All branches succeeded: atomically replace the variants. (Keeps the parent
-# tests/fixtures dir and its .gitignore intact.)
+# tests/Fixtures dir and its .gitignore intact.)
 rm -rf "$DEST"
 mkdir -p "$DEST"
 mv "$staging"/* "$DEST/"
