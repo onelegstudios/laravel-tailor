@@ -1,6 +1,7 @@
 # Composer Related
 composer.lock
 /vendor
+auth.json
 
 # Frontend Assets
 /node_modules

@@ -1,0 +1,506 @@
+#!/usr/bin/env php
+<?php
+
+/*
+ * Dev-only script: scan for the icon names the app needs and record them in
+ * config/tailor.php under the `icons` key, split into sub-arrays by source.
+ *
+ * Tailor needs to know every icon that must be re-mapped when the user switches
+ * UI kit. The `icons` key has two groups, each with two sub-groups:
+ *
+ *   starter-kit          — icons the app's own views use (scanned from
+ *                          tests/Fixtures):
+ *       heroicons        — Flux's default Heroicons.
+ *       lucide           — names the starter kit ships as local overrides (blade
+ *                          files under resources/views/flux/icon/, from lucide.dev).
+ *   flux                 — icons Flux's own bundled components render internally
+ *                          (scanned from vendor/livewire/flux + flux-pro):
+ *       normal           — regular icons (e.g. the date-picker's `calendar`),
+ *                          excluding any already in starter-kit (heroicons or
+ *                          lucide) so no icon is duplicated across the two groups.
+ *       animated         — Flux's built-in animated pseudo-icons (e.g. the
+ *                          `loading` spinner); see ANIMATED_ICONS.
+ *
+ * Values: heroicons and flux.normal start empty (their Lucide equivalent is
+ * filled in later). lucide and animated map to themselves (correct in any kit).
+ *
+ * Icons are referenced four ways in the Flux markup:
+ *
+ *   <flux:icon.chevron-down />          (component dot syntax)
+ *   <flux:icon name="loading" />        (component name attr)
+ *   <flux:button icon="trash" />        (icon / icon:trailing / icon:leading attr)
+ *   @props(['icon' => 'document'])      (component's default icon, e.g. file-item)
+ *
+ * Limitation — hardcoded inline SVGs: a few Flux components draw their glyph as a
+ * raw <svg><path> embedded in the blade rather than via the icon system above
+ * (e.g. sidebar/collapse's panel toggle, toast's close, the Pro editor toolbar).
+ * These have no icon name to scan and no flux/icon/<name>.blade.php hook to
+ * override, so they can't be captured here or remapped through config's icons key.
+ * Re-skinning them would require overriding the whole component blade — out of
+ * scope for this name-based scanner.
+ *
+ * Note on Flux Pro: Pro adds components, not an icon set, so its component blades
+ * are scanned alongside the free package's. Both are pulled in as dev
+ * dependencies (see composer.json require-dev); the Pro repository requires
+ * license auth, which is read from a local/global composer auth.json — never
+ * committed. If a Flux package is missing from vendor, its source is skipped.
+ *
+ * Existing entries (and any values already filled in) keep their order. By
+ * default the script is append-only: newly discovered names are added, and names
+ * no longer found anywhere are reported as a warning but left in place (so manual
+ * mappings survive). Pass --prune to actually remove those stale entries.
+ *
+ * Usage (run with -h/--help for details):
+ *   bin/scan-icons               # add new icons; warn about stale ones
+ *   bin/scan-icons -p, --prune   # also remove icons no longer found
+ *   bin/scan-icons -c, --check   # report missing icons, write nothing (exit 1)
+ *   bin/scan-icons -h, --help    # show help
+ */
+
+// Flux's built-in animated pseudo-icons: not Heroicons, and they stay put across
+// kits. Flux Pro adds no icons, so this list is complete; extend it if needed.
+const ANIMATED_ICONS = ['loading'];
+
+$root = dirname(__DIR__);
+$fixturesDir = $root.'/tests/Fixtures';
+$configFile = $root.'/config/tailor.php';
+
+$flags = array_slice($argv, 1);
+$hasFlag = fn (string ...$names): bool => array_intersect($names, $flags) !== [];
+
+$help = $hasFlag('--help', '-h');
+$check = $hasFlag('--check', '-c');
+$prune = $hasFlag('--prune', '-p');
+
+if ($help) {
+    echo <<<'HELP'
+        scan-icons — scan the starter-kit fixtures and Flux's components for the
+        icon names the app uses, and record them in config/tailor.php (grouped under
+        icons.starter-kit and icons.flux).
+
+        Usage:
+          bin/scan-icons [options]
+
+        Options:
+          -c, --check   Report icons missing from the config and exit 1 without writing.
+                        For tests/CI; makes no changes.
+          -p, --prune   Remove config entries for icons no longer found in any source.
+                        Without it, stale icons are kept and reported as a warning.
+          -h, --help    Show this help and exit.
+
+        With no options, newly found icons are added and stale ones are only warned about.
+
+        HELP;
+    exit(0);
+}
+
+if (! is_dir($fixturesDir)) {
+    fwrite(STDERR, "Fixtures directory not found: {$fixturesDir}\n");
+    fwrite(STDERR, "Run bin/download-fixtures first.\n");
+    exit(1);
+}
+
+/**
+ * Collect every text file under a directory that may contain markup.
+ *
+ * @return list<string>
+ */
+function collectFiles(string $dir): array
+{
+    $allowed = ['blade.php', 'php', 'vue', 'js', 'ts', 'html', 'antlers.html'];
+
+    $files = [];
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)
+    );
+
+    foreach ($iterator as $file) {
+        $name = $file->getFilename();
+        foreach ($allowed as $ext) {
+            if (str_ends_with($name, '.'.$ext)) {
+                // Normalise to forward slashes so downstream path matching (the
+                // /flux/icon/ checks) works on Windows, where the iterator yields
+                // backslash-separated paths.
+                $files[] = str_replace('\\', '/', $file->getPathname());
+                break;
+            }
+        }
+    }
+
+    // Sort for a deterministic scan order across platforms — RecursiveDirectory-
+    // Iterator yields entries in filesystem-dependent order, which would otherwise
+    // make the generated icon order (and the config it produces) differ per OS.
+    sort($files);
+
+    return $files;
+}
+
+/**
+ * Scan files for icon names referenced via either Flux syntax. Skips icon-
+ * definition files (the flux/icon/ dirs), which declare icons rather than use
+ * them.
+ *
+ * @param  list<string>  $files
+ * @return array<string, true>
+ */
+function scanIcons(array $files): array
+{
+    $found = [];
+    foreach ($files as $file) {
+        if (str_contains($file, '/flux/icon/')) {
+            continue;
+        }
+
+        $contents = file_get_contents($file);
+
+        if ($contents === false) {
+            continue;
+        }
+
+        // <flux:icon.chevron-down />
+        if (preg_match_all('/flux:icon\.([a-z0-9-]+)/', $contents, $m) > 0) {
+            foreach ($m[1] as $name) {
+                $found[$name] = true;
+            }
+        }
+
+        // <flux:icon name="loading" /> (name attr; dynamic "{{ $icon }}" excluded).
+        // Quote group is backreferenced so single- and double-quoted attrs match.
+        if (preg_match_all('/<flux:icon\b[^>]*\bname=([\'"])([a-z0-9-]+)\1/', $contents, $m) > 0) {
+            foreach ($m[2] as $name) {
+                $found[$name] = true;
+            }
+        }
+
+        // icon="trash"  icon:trailing="chevron-down"  icon:leading="plus"
+        // (deliberately excludes icon:variant="outline" and other attributes).
+        // Lookbehind rejects a leading name char so data-icon="x" doesn't match.
+        if (preg_match_all('/(?<![\w-])icon(?::(?:trailing|leading))?=([\'"])([a-z0-9-]+)\1/', $contents, $m) > 0) {
+            foreach ($m[2] as $name) {
+                $found[$name] = true;
+            }
+        }
+
+        // @props(['icon' => 'document']) — a component's hardcoded default icon.
+        // Keyed on exactly 'icon', so 'iconVariant' => 'mini' is left out.
+        if (preg_match_all('/[\'"]icon[\'"]\s*=>\s*[\'"]([a-z0-9-]+)[\'"]/', $contents, $m) > 0) {
+            foreach ($m[1] as $name) {
+                $found[$name] = true;
+            }
+        }
+    }
+
+    return $found;
+}
+
+// Source 1: the app's own views.
+$fixtureFiles = collectFiles($fixturesDir);
+
+// Source 2: Flux's bundled component blades (free + Pro), skipped if uninstalled.
+$fluxRoots = array_filter([
+    $root.'/vendor/livewire/flux/stubs/resources/views/flux',
+    $root.'/vendor/livewire/flux-pro/stubs/resources/views/flux',
+], 'is_dir');
+$fluxFiles = [];
+foreach ($fluxRoots as $dir) {
+    $fluxFiles = array_merge($fluxFiles, collectFiles($dir));
+}
+
+// Whether Flux's component blades were actually available to scan. When they
+// aren't, flux.normal can't tell "removed" from "Flux not installed", so that
+// group is never warned about or pruned.
+$fluxScanned = $fluxFiles !== [];
+
+if (! $fluxScanned) {
+    fwrite(STDERR, "Note: Flux not installed in vendor; flux.normal left unchanged.\n");
+}
+
+// Names the starter kit overrides locally with Lucide blade files (its own
+// flux/icon/ dir; vendor flux/icon/ holds Flux's bundled icon *definitions*).
+$overrides = [];
+foreach ($fixtureFiles as $file) {
+    if (preg_match('#/flux/icon/([a-z0-9-]+)\.blade\.php$#', $file, $m) === 1) {
+        $overrides[$m[1]] = true;
+    }
+}
+
+$fixtureIcons = array_keys(scanIcons($fixtureFiles));
+$fluxIcons = array_keys(scanIcons($fluxFiles));
+$allIcons = array_unique(array_merge($fixtureIcons, $fluxIcons));
+
+$isOverride = fn (string $name): bool => isset($overrides[$name]);
+$isAnimated = fn (string $name): bool => in_array($name, ANIMATED_ICONS, true);
+
+// Classify by source. The starter-kit group is the app's own icons (heroicons +
+// lucide overrides). flux.normal are the extra icons only Flux's components pull
+// in — excluding anything already in starter-kit so no icon is duplicated across
+// the two groups. animated is keyed off the name.
+$heroicons = array_filter($fixtureIcons, fn (string $name): bool => ! $isOverride($name) && ! $isAnimated($name));
+$lucide = array_filter($allIcons, $isOverride);
+$animated = array_filter($allIcons, fn (string $name): bool => ! $isOverride($name) && $isAnimated($name));
+
+$starterKitSet = array_flip(array_merge($heroicons, $lucide));
+$normal = array_filter(
+    $fluxIcons,
+    fn (string $name): bool => ! $isAnimated($name) && ! isset($starterKitSet[$name])
+);
+
+$config = is_file($configFile) ? require $configFile : [];
+
+if (! is_array($config)) {
+    fwrite(STDERR, "Expected {$configFile} to return an array.\n");
+    exit(1);
+}
+
+// Icons are stored as associative arrays keyed by the icon name, with the value
+// reserved for its equivalent in the target UI kit (empty for now).
+$existingIcons = $config['icons'] ?? [];
+
+/**
+ * Reconcile an existing group with the scanned names. Newly discovered names are
+ * appended (seeded with $value); names no longer scanned are reported as stale
+ * and removed only when $prune is true. Existing entries — and any values already
+ * filled in — keep their order.
+ *
+ * @param  array<string, string>  $existing
+ * @param  list<string>  $scanned
+ * @param  callable(string): string  $value
+ * @return array{0: array<string, string>, 1: list<string>, 2: list<string>}
+ */
+function mergeGroup(array $existing, array $scanned, callable $value, bool $prune): array
+{
+    $existingNames = array_keys($existing);
+    $new = array_values(array_diff($scanned, $existingNames));
+    $stale = array_values(array_diff($existingNames, $scanned));
+    sort($new);
+    sort($stale);
+
+    foreach ($new as $name) {
+        $existing[$name] = $value($name);
+    }
+
+    if ($prune) {
+        foreach ($stale as $name) {
+            unset($existing[$name]);
+        }
+    }
+
+    return [$existing, $new, $stale];
+}
+
+// Nested groups: [scanned names, value seed, reliable?]. Heroicons and
+// flux.normal need a Lucide mapping (empty); lucide and animated map to
+// themselves. "reliable" marks whether a missing scan means "removed" — false
+// for flux.normal when Flux isn't installed, so it's never warned about/pruned.
+$empty = fn (string $name): string => '';
+$self = fn (string $name): string => $name;
+$groups = [
+    'starter-kit' => [
+        'heroicons' => [array_values($heroicons), $empty, true],
+        'lucide' => [array_values($lucide), $self, true],
+    ],
+    'flux' => [
+        'normal' => [array_values($normal), $empty, $fluxScanned],
+        'animated' => [array_values($animated), $self, true],
+    ],
+];
+
+$merged = [];
+$added = [];
+$removed = [];
+$counts = [];
+foreach ($groups as $parent => $children) {
+    foreach ($children as $child => [$scanned, $value, $reliable]) {
+        $key = "{$parent}.{$child}";
+        $existing = $existingIcons[$parent][$child] ?? [];
+
+        if ($reliable) {
+            [$merged[$parent][$child], $added[$key], $removed[$key]] = mergeGroup($existing, $scanned, $value, $prune);
+        } else {
+            // Source unavailable: keep the group exactly as it is.
+            [$merged[$parent][$child], $added[$key], $removed[$key]] = [$existing, [], []];
+        }
+
+        $counts[] = count($merged[$parent][$child])." {$key}";
+    }
+}
+
+$summary = implode(', ', $counts);
+$totalNew = array_sum(array_map('count', $added));
+$totalStale = array_sum(array_map('count', $removed));
+
+/**
+ * Write the per-group name lists to a stream, prefixed by $verb.
+ *
+ * @param  array<string, list<string>>  $groups
+ */
+function reportGroups($stream, string $verb, array $groups): void
+{
+    foreach ($groups as $key => $names) {
+        if ($names !== []) {
+            fwrite($stream, $verb.' '.count($names).' '.$key.': '.implode(', ', $names)."\n");
+        }
+    }
+}
+
+// Build the would-be file once; both --check and the writer compare it to disk so
+// they agree on "out of sync" (new icons, formatting drift, or --prune staleness).
+$iconsBlock = "'icons' => ".exportPhp($merged, 1);
+$current = is_file($configFile) ? file_get_contents($configFile) : '';
+$contents = buildConfigContents($configFile, $iconsBlock);
+$changed = $contents !== $current;
+
+// --check: report drift and exit without writing.
+if ($check) {
+    if (! $changed) {
+        echo "config/tailor.php is up to date ({$summary}).\n";
+        exit(0);
+    }
+
+    fwrite(STDERR, "config/tailor.php is out of sync:\n");
+    reportGroups(STDERR, 'missing', $added);
+    if ($prune) {
+        reportGroups(STDERR, 'stale', $removed);
+    }
+    fwrite(STDERR, 'Run bin/scan-icons'.($prune ? ' --prune' : '')." to update it.\n");
+    exit(1);
+}
+
+// Nothing to change: in append-only mode stale entries stay (warned, not removed).
+if (! $changed) {
+    if ($totalStale > 0) {
+        fwrite(STDERR, "Warning: {$totalStale} icon(s) no longer found in any source (kept):\n");
+        reportGroups(STDERR, 'stale', $removed);
+        fwrite(STDERR, "Run bin/scan-icons --prune to remove them.\n");
+    } else {
+        echo "config/tailor.php is up to date ({$summary}).\n";
+    }
+    exit(0);
+}
+
+/**
+ * Pretty-print a value as PHP using short-array syntax.
+ */
+function exportPhp(mixed $value, int $depth): string
+{
+    if (! is_array($value)) {
+        return var_export($value, true);
+    }
+
+    if ($value === []) {
+        return '[]';
+    }
+
+    $pad = str_repeat('    ', $depth + 1);
+    $closePad = str_repeat('    ', $depth);
+    $isList = array_is_list($value);
+
+    $lines = [];
+    foreach ($value as $key => $item) {
+        $prefix = $isList ? '' : var_export($key, true).' => ';
+        $lines[] = $pad.$prefix.exportPhp($item, $depth + 1).',';
+    }
+
+    return "[\n".implode("\n", $lines)."\n".$closePad.']';
+}
+
+/**
+ * Find the `'icons' => [ ... ]` span in the config source by matching brackets
+ * (ignoring any inside quoted strings). Returns the start offset at the icons
+ * key and the length through the matching close bracket, or null if not found.
+ *
+ * @return array{0: int, 1: int}|null
+ */
+function locateIconsSpan(string $source): ?array
+{
+    if (preg_match('/([\'"])icons\1\s*=>\s*\[/', $source, $m, PREG_OFFSET_CAPTURE) !== 1) {
+        return null;
+    }
+
+    $keyStart = $m[0][1];
+    $i = $keyStart + strlen($m[0][0]) - 1; // the opening [
+    $len = strlen($source);
+    $depth = 0;
+
+    for (; $i < $len; $i++) {
+        $char = $source[$i];
+
+        if ($char === '\'' || $char === '"') {
+            // Skip the string literal so brackets inside it don't count.
+            for ($i++; $i < $len; $i++) {
+                if ($source[$i] === '\\') {
+                    $i++;
+                } elseif ($source[$i] === $char) {
+                    break;
+                }
+            }
+        } elseif ($char === '[') {
+            $depth++;
+        } elseif ($char === ']' && --$depth === 0) {
+            return [$keyStart, $i - $keyStart + 1];
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Build the would-be config file: the icons array spliced into (or inserted into)
+ * the existing file, or a minimal stub when no file exists. Aborts on a file that
+ * can't be read or has no `return [` array.
+ */
+function buildConfigContents(string $configFile, string $iconsBlock): string
+{
+    if (! is_file($configFile)) {
+        return "<?php\n\n// config for Onelegstudios/Tailor\nreturn [\n    {$iconsBlock},\n];\n";
+    }
+
+    $original = file_get_contents($configFile);
+
+    if ($original === false) {
+        fwrite(STDERR, "Could not read {$configFile}.\n");
+        exit(1);
+    }
+
+    if (($span = locateIconsSpan($original)) !== null) {
+        // Replace the existing icons array in place.
+        return substr_replace($original, $iconsBlock, $span[0], $span[1]);
+    }
+
+    if (preg_match('/\breturn\s*\[/', $original, $m, PREG_OFFSET_CAPTURE) === 1) {
+        // No icons key yet: insert one at the top of the returned array.
+        $at = $m[0][1] + strlen($m[0][0]);
+
+        return substr_replace($original, "\n    {$iconsBlock},", $at, 0);
+    }
+
+    fwrite(STDERR, "Could not find a 'return [' array in {$configFile} to update.\n");
+    exit(1);
+}
+
+// Write atomically: a temp file in the same dir, then rename into place, so an
+// interrupted or failed write can never leave config/tailor.php truncated.
+$tmpFile = $configFile.'.tmp';
+if (file_put_contents($tmpFile, $contents) === false || ! rename($tmpFile, $configFile)) {
+    @unlink($tmpFile);
+    fwrite(STDERR, "Failed to write {$configFile}.\n");
+    exit(1);
+}
+
+reportGroups(STDOUT, 'added', $added);
+
+if ($prune) {
+    reportGroups(STDOUT, 'removed', $removed);
+} elseif ($totalStale > 0) {
+    fwrite(STDERR, "Warning: {$totalStale} icon(s) no longer found in any source (kept):\n");
+    reportGroups(STDERR, 'stale', $removed);
+    fwrite(STDERR, "Run bin/scan-icons --prune to remove them.\n");
+}
+
+echo "config/tailor.php now lists {$summary}.\n";
+
+if ($totalNew > 0) {
+    $newNames = array_merge(...array_values($added));
+    sort($newNames);
+    echo "Found {$totalNew} new icon(s): ".implode(', ', $newNames).".\n";
+}
