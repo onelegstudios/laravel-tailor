@@ -21,9 +21,12 @@
         "illuminate/contracts": "^11.0||^12.0||^13.0"
     },
     "require-dev": {
-        "laravel/pint": "^1.14",
-        "nunomaduro/collision": "^8.8",
         "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.14",
+        "livewire/flux": "^2.0",
+        "livewire/flux-pro": "*",
+        "livewire/livewire": "^4.0",
+        "nunomaduro/collision": "^8.8",
         "orchestra/testbench": "^11.0.0||^10.0.0||^9.0.0",
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-arch": "^4.0",
@@ -59,7 +62,7 @@
             "@test"
         ],
         "types:check": [
-            "phpstan analyse"
+            "phpstan analyse --memory-limit=2G"
         ],
         "test": [
             "@lint:check",
@@ -87,5 +90,12 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "name": "flux-pro",
+            "type": "composer",
+            "url": "https://composer.fluxui.dev"
+        }
+    ]
 }

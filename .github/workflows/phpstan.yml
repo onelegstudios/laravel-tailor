@@ -21,6 +21,9 @@ jobs:
           php-version: '8.5'
           coverage: none
 
+      - name: Authenticate with Flux Pro composer repository
+        run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
+
       - name: Install composer dependencies
         uses: ramsey/composer-install@v4
 

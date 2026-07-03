@@ -1,0 +1,37 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Console\OutputStyle;
+use Onelegstudios\Tailor\Tasks\TailorTask;
+
+class {{ class }} implements TailorTask
+{
+    /**
+     * The stable kebab-case identifier — the config key and the prompt value.
+     */
+    public function key(): string
+    {
+        return '{{ key }}';
+    }
+
+    /**
+     * The label shown in the "what else" prompt.
+     */
+    public function label(): string
+    {
+        return '{{ class }}';
+    }
+
+    /**
+     * Run the task.
+     *
+     * @return array<int, string> items that could not be applied
+     */
+    public function apply(?OutputStyle $output = null): array
+    {
+        //
+
+        return [];
+    }
+}

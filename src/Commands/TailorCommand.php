@@ -3,40 +3,79 @@
 namespace Onelegstudios\Tailor\Commands;
 
 use Illuminate\Console\Command;
+use Onelegstudios\Tailor\Kits\UiKit;
+use Onelegstudios\Tailor\Registry;
+use Onelegstudios\Tailor\Tasks\TailorTask;
 
 use function Laravel\Prompts\intro;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\outro;
 use function Laravel\Prompts\select;
+use function Laravel\Prompts\warning;
 
 class TailorCommand extends Command
 {
-    public $signature = 'tailor';
+    public $signature = 'tailor {--ui-kit= : The UI kit to tailor to (hero, lucide, tall-stack); prompts when omitted}';
 
     public $description = 'Tailor the livewire starter kit to your needs';
 
-    public function handle(): int
+    public function handle(Registry $registry): int
     {
         intro('Welcome to Tailor — let\'s customize your starter kit.');
 
-        $uikit = select(
-            label: 'What UI kit do you want to use?',
-            options: [
-                'hero' => 'Flux with Heroicons',
-                'lucide' => 'Flux with Lucide Icons',
-                'tall-stack' => 'Tall Stack UI',
-            ],
-            default: 'hero',
-            hint: 'Use the arrow keys to choose, enter to tailor.',
-        );
+        $kits = $registry->resolve(config('tailor.kits', []), config('tailor.overrides.kits', ''), UiKit::class);
+        $tasks = $registry->resolve(config('tailor.tasks', []), config('tailor.overrides.tasks', ''), TailorTask::class);
 
-        $options = multiselect(
-            label: 'What else would you like to tailor?',
-            options: [
-                'move_auth' => 'Move the auth folder',
-            ],
-            hint: 'Use space to select, enter to confirm.',
-        );
+        if ($kits === [] && $tasks === []) {
+            warning('There is nothing to tailor — no UI kits or tasks are configured.');
+
+            return self::SUCCESS;
+        }
+
+        $uikit = null;
+
+        if ($kits !== []) {
+            $uikit = $this->option('ui-kit');
+
+            if ($uikit === null) {
+                $uikit = select(
+                    label: 'What UI kit do you want to use?',
+                    options: array_map(fn ($kit) => $kit->label(), $kits),
+                    default: 'hero',
+                    hint: 'Use the arrow keys to choose, enter to tailor.',
+                );
+            } elseif (! isset($kits[$uikit])) {
+                $this->error("Unknown UI kit [{$uikit}]. Choose one of: ".implode(', ', array_keys($kits)).'.');
+
+                return self::FAILURE;
+            }
+        }
+
+        $selected = [];
+
+        if ($tasks !== []) {
+            $selected = multiselect(
+                label: $kits === [] ? 'What would you like to tailor?' : 'What else would you like to tailor?',
+                options: array_map(fn ($task) => $task->label(), $tasks),
+                hint: 'Use space to select, enter to confirm.',
+            );
+        }
+
+        $failed = [];
+
+        if ($uikit !== null) {
+            $failed = $kits[$uikit]->apply($this->output);
+        }
+
+        foreach ($selected as $key) {
+            $tasks[$key]->apply($this->output);
+        }
+
+        if ($failed !== []) {
+            outro('Tailoring finished, but '.count($failed).' icon(s) could not be downloaded.');
+
+            return self::FAILURE;
+        }
 
         outro('All done! Your starter kit has been tailored.');
 
