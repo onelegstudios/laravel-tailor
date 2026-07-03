@@ -1,6 +1,6 @@
 <?php
 
-$root = dirname(__DIR__);
+$root = dirname(__DIR__, 2);
 
 it('groups icons into starter-kit and flux in config/tailor.php', function () use ($root) {
     $icons = (require $root.'/config/tailor.php')['icons'] ?? [];
