@@ -2,6 +2,7 @@
 
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Filesystem\Filesystem;
+use Onelegstudios\Tailor\Actions\RemoveTailorPackage;
 use Onelegstudios\Tailor\Tests\Stubs\RecordingFluxIconCommand;
 
 beforeEach(function () {
@@ -26,6 +27,7 @@ it('asks about the UI kit first, then the remaining options', function () {
         ->expectsChoice('What else would you like to tailor?', ['move-auth'], [
             'move-auth' => 'Move the auth folder',
         ])
+        ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
 });
 
@@ -39,6 +41,7 @@ it('defaults the UI kit to Flux with Heroicons', function () {
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
         ])
+        ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
 });
 
@@ -60,6 +63,7 @@ it('downloads the starter-kit Lucide icons when the Lucide kit is selected', fun
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
         ])
+        ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
 
     expect(RecordingFluxIconCommand::$calls)->toBe(4)
@@ -85,6 +89,7 @@ it('downloads the Flux internal icons when the Lucide kit is selected', function
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
         ])
+        ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
 
     expect(RecordingFluxIconCommand::$calls)->toBe(2)
@@ -96,9 +101,23 @@ it('uses the --ui-kit option instead of prompting for the UI kit', function () {
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
         ])
+        ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
 
     expect(RecordingFluxIconCommand::$calls)->toBe(0);
+});
+
+it('removes the package when the user confirms after tailoring', function () {
+    $remover = Mockery::mock(RemoveTailorPackage::class);
+    $remover->shouldReceive('execute')->once()->andReturnTrue();
+    $this->app->instance(RemoveTailorPackage::class, $remover);
+
+    $this->artisan('tailor', ['--ui-kit' => 'hero'])
+        ->expectsChoice('What else would you like to tailor?', [], [
+            'move-auth' => 'Move the auth folder',
+        ])
+        ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'yes')
+        ->assertSuccessful();
 });
 
 it('fails when given an unknown --ui-kit', function () {
@@ -138,6 +157,7 @@ it('skips the UI kit prompt and drops "else" when no kits are configured', funct
         ->expectsChoice('What would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
         ])
+        ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
 });
 
@@ -150,6 +170,7 @@ it('skips the task prompt when no tasks are configured', function () {
             'lucide' => 'Flux with Lucide Icons',
             'tall-stack' => 'Tall Stack UI',
         ])
+        ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
 });
 
@@ -172,6 +193,7 @@ it('does not touch icons when the Heroicons kit is selected', function () {
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
         ])
+        ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
 
     expect(RecordingFluxIconCommand::$calls)->toBe(0);
