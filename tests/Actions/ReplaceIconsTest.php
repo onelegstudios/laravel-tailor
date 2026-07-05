@@ -1,12 +1,12 @@
 <?php
 
 use Illuminate\Filesystem\Filesystem;
-use Onelegstudios\Tailor\Actions\ReplaceHeroicons;
+use Onelegstudios\Tailor\Actions\ReplaceIcons;
 
 beforeEach(function () {
     $this->tempDir = sys_get_temp_dir().'/tailor-icons-'.uniqid();
     mkdir($this->tempDir, 0755, true);
-    $this->action = new ReplaceHeroicons(new Filesystem);
+    $this->action = new ReplaceIcons(new Filesystem);
 });
 
 afterEach(function () {

@@ -20,6 +20,7 @@ afterEach(function () {
 it('asks about the UI kit first, then the remaining options', function () {
     $this->artisan('tailor')
         ->expectsChoice('What UI kit do you want to use?', 'lucide', [
+            'as-is' => 'Leave the starter kit as-is',
             'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
             'tall-stack' => 'Tall Stack UI',
@@ -31,9 +32,10 @@ it('asks about the UI kit first, then the remaining options', function () {
         ->assertSuccessful();
 });
 
-it('defaults the UI kit to Flux with Heroicons', function () {
+it('defaults the UI kit to leaving the starter kit as-is', function () {
     $this->artisan('tailor')
-        ->expectsChoice('What UI kit do you want to use?', 'hero', [
+        ->expectsChoice('What UI kit do you want to use?', 'as-is', [
+            'as-is' => 'Leave the starter kit as-is',
             'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
             'tall-stack' => 'Tall Stack UI',
@@ -56,6 +58,7 @@ it('downloads the starter-kit Lucide icons when the Lucide kit is selected', fun
 
     $this->artisan('tailor')
         ->expectsChoice('What UI kit do you want to use?', 'lucide', [
+            'as-is' => 'Leave the starter kit as-is',
             'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
             'tall-stack' => 'Tall Stack UI',
@@ -82,6 +85,7 @@ it('downloads the Flux internal icons when the Lucide kit is selected', function
 
     $this->artisan('tailor')
         ->expectsChoice('What UI kit do you want to use?', 'lucide', [
+            'as-is' => 'Leave the starter kit as-is',
             'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
             'tall-stack' => 'Tall Stack UI',
@@ -140,6 +144,7 @@ it('fails when an icon cannot be downloaded', function () {
 
     $this->artisan('tailor')
         ->expectsChoice('What UI kit do you want to use?', 'lucide', [
+            'as-is' => 'Leave the starter kit as-is',
             'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
             'tall-stack' => 'Tall Stack UI',
@@ -166,6 +171,7 @@ it('skips the task prompt when no tasks are configured', function () {
 
     $this->artisan('tailor')
         ->expectsChoice('What UI kit do you want to use?', 'hero', [
+            'as-is' => 'Leave the starter kit as-is',
             'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
             'tall-stack' => 'Tall Stack UI',
@@ -183,13 +189,25 @@ it('warns and does nothing when neither kits nor tasks are configured', function
         ->assertSuccessful();
 });
 
-it('does not touch icons when the Heroicons kit is selected', function () {
+it('downloads nothing when leaving the starter kit as-is', function () {
     $this->artisan('tailor')
-        ->expectsChoice('What UI kit do you want to use?', 'hero', [
+        ->expectsChoice('What UI kit do you want to use?', 'as-is', [
+            'as-is' => 'Leave the starter kit as-is',
             'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
             'tall-stack' => 'Tall Stack UI',
         ])
+        ->expectsChoice('What else would you like to tailor?', [], [
+            'move-auth' => 'Move the auth folder',
+        ])
+        ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
+        ->assertSuccessful();
+
+    expect(RecordingFluxIconCommand::$calls)->toBe(0);
+});
+
+it('downloads nothing when the Heroicons kit is selected', function () {
+    $this->artisan('tailor', ['--ui-kit' => 'hero'])
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
         ])

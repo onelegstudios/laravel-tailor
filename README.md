@@ -7,7 +7,7 @@
 
 Tailor the [Laravel Livewire starter kit](https://laravel.com/docs/starter-kits) to your taste. Run a single interactive command to swap the kit's icon set, apply optional tweaks, and keep everything consistent — no hand-editing Blade views or hunting down icon names.
 
-Out of the box Tailor can swap the starter kit's [Heroicons](https://heroicons.com) for their [Lucide](https://lucide.dev) equivalents (re-aliasing the icons Flux uses internally so nothing breaks), and it's built to be extended with your own **kits** and **tasks**.
+Out of the box Tailor can unify the starter kit's icon set in either direction — swap its [Heroicons](https://heroicons.com) for their [Lucide](https://lucide.dev) equivalents (re-aliasing the icons Flux uses internally so nothing breaks), or swap the handful of Lucide icons it ships back to Heroicons — and it's built to be extended with your own **kits** and **tasks**.
 
 ```bash
 php artisan tailor
@@ -17,7 +17,8 @@ php artisan tailor
 ┌ Welcome to Tailor — let's customize your starter kit.
 │
 ◇ What UI kit do you want to use?
-│ › Flux with Heroicons
+│ › Leave the starter kit as-is
+│   Flux with Heroicons
 │   Flux with Lucide Icons
 │   Tall Stack UI
 │
@@ -60,7 +61,7 @@ php artisan tailor
 You'll be asked to pick a **UI kit** (mutually exclusive) and any number of additional **tasks**. To skip the kit prompt, pass it directly:
 
 ```bash
-php artisan tailor --ui-kit=lucide   # hero | lucide | tall-stack
+php artisan tailor --ui-kit=lucide   # as-is | hero | lucide | tall-stack
 ```
 
 ### Removing Tailor when you're done
@@ -75,11 +76,12 @@ composer remove oneleggedswede/laravel-tailor --dev
 
 ### Built-in kits
 
-| Key          | Label                  | What it does                                                            |
-| ------------ | ---------------------- | ----------------------------------------------------------------------- |
-| `hero`       | Flux with Heroicons    | The starter kit's default — nothing to apply.                           |
-| `lucide`     | Flux with Lucide Icons | Replaces Heroicons with Lucide equivalents and re-aliases Flux's icons. |
-| `tall-stack` | Tall Stack UI          | Placeholder — not yet implemented.                                      |
+| Key          | Label                       | What it does                                                            |
+| ------------ | --------------------------- | ----------------------------------------------------------------------- |
+| `as-is`      | Leave the starter kit as-is | The default — a no-op that leaves the icon set untouched.               |
+| `hero`       | Flux with Heroicons         | Swaps the starter kit's handful of Lucide icons back to Heroicons.      |
+| `lucide`     | Flux with Lucide Icons      | Replaces Heroicons with Lucide equivalents and re-aliases Flux's icons. |
+| `tall-stack` | Tall Stack UI               | Placeholder — not yet implemented.                                      |
 
 ### Built-in tasks
 

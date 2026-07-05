@@ -4,23 +4,25 @@ namespace Onelegstudios\Tailor\Actions;
 
 use Illuminate\Filesystem\Filesystem;
 
-class ReplaceHeroicons
+class ReplaceIcons
 {
     public function __construct(
         private readonly Filesystem $files,
     ) {}
 
     /**
-     * Replace Heroicon names with their Lucide equivalents in all blade files
-     * found under $viewPath.
+     * Rename icon references in every blade file under $viewPath. The map is
+     * direction-agnostic — the Lucide kit passes heroicon => lucide, the
+     * Heroicons kit passes lucide => heroicon — so this simply swaps each source
+     * name for its target wherever an icon attribute or <flux:icon.*> tag uses it.
      *
-     * @param  array<string, string>  $map  heroicon-name => lucide-name
+     * @param  array<string, string>  $map  source-icon-name => target-icon-name
      */
     public function execute(string $viewPath, array $map): void
     {
         $replacements = array_filter(
             $map,
-            fn (string $lucide, string $heroicon): bool => $lucide !== '' && $lucide !== $heroicon,
+            fn (string $target, string $source): bool => $target !== '' && $target !== $source,
             ARRAY_FILTER_USE_BOTH,
         );
 
@@ -47,20 +49,20 @@ class ReplaceHeroicons
      */
     private function replaceInContents(string $contents, array $map): string
     {
-        foreach ($map as $heroicon => $lucide) {
-            $quoted = preg_quote($heroicon, '/');
+        foreach ($map as $source => $target) {
+            $quoted = preg_quote($source, '/');
 
             // icon="name", icon:trailing="name", icon-trailing="name", etc.
             $contents = preg_replace(
                 '/\b(icon(?:[:-](?:trailing|leading))?)="'.$quoted.'"/',
-                '$1="'.$lucide.'"',
+                '$1="'.$target.'"',
                 $contents,
             ) ?? $contents;
 
             // <flux:icon.name (component syntax)
             $contents = preg_replace(
                 '/<(flux:icon\.)'.$quoted.'(?=[\s\/>])/',
-                '<$1'.$lucide,
+                '<$1'.$target,
                 $contents,
             ) ?? $contents;
         }
