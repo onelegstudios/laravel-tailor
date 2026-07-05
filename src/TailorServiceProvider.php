@@ -3,6 +3,7 @@
 namespace Onelegstudios\Tailor;
 
 use Livewire\Livewire;
+use Onelegstudios\Tailor\Actions\RemoveTailorPackage;
 use Onelegstudios\Tailor\Commands\MakeKitCommand;
 use Onelegstudios\Tailor\Commands\MakeTaskCommand;
 use Onelegstudios\Tailor\Commands\TailorCommand;
@@ -11,6 +12,17 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class TailorServiceProvider extends PackageServiceProvider
 {
+    public function packageRegistered(): void
+    {
+        // Resolve the action against Laravel's base-path-aware Composer singleton
+        // so `composer remove` runs from the application root, not a fresh,
+        // unconfigured Composer instance.
+        $this->app->bind(
+            RemoveTailorPackage::class,
+            fn ($app) => new RemoveTailorPackage($app['composer']),
+        );
+    }
+
     public function configurePackage(Package $package): void
     {
         /*

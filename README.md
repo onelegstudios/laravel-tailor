@@ -30,7 +30,7 @@ php artisan tailor
 ## Requirements
 
 - PHP 8.3+
-- Laravel 11, 12, or 13
+- Laravel 13
 - A Livewire + [Flux](https://fluxui.dev) starter kit (required for the icon-swapping kits)
 
 ## Installation
@@ -61,6 +61,16 @@ You'll be asked to pick a **UI kit** (mutually exclusive) and any number of addi
 
 ```bash
 php artisan tailor --ui-kit=lucide   # hero | lucide | tall-stack
+```
+
+### Removing Tailor when you're done
+
+Tailor is a one-time scaffolding tool — once it has tailored your starter kit there is nothing left for it to do. **We recommend removing the package after you've run the command** so it doesn't linger as a dev dependency.
+
+The `tailor` command offers to do this for you: after tailoring finishes it asks whether you'd like to remove the package, and if you confirm it runs the uninstall for you. You can always remove it manually instead:
+
+```bash
+composer remove oneleggedswede/laravel-tailor --dev
 ```
 
 ### Built-in kits
