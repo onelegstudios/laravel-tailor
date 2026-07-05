@@ -3,10 +3,12 @@
 namespace Onelegstudios\Tailor\Commands;
 
 use Illuminate\Console\Command;
+use Onelegstudios\Tailor\Actions\RemoveTailorPackage;
 use Onelegstudios\Tailor\Kits\UiKit;
 use Onelegstudios\Tailor\Registry;
 use Onelegstudios\Tailor\Tasks\TailorTask;
 
+use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\intro;
 use function Laravel\Prompts\multiselect;
 use function Laravel\Prompts\outro;
@@ -19,7 +21,7 @@ class TailorCommand extends Command
 
     public $description = 'Tailor the livewire starter kit to your needs';
 
-    public function handle(Registry $registry): int
+    public function handle(Registry $registry, RemoveTailorPackage $remover): int
     {
         intro('Welcome to Tailor — let\'s customize your starter kit.');
 
@@ -77,8 +79,28 @@ class TailorCommand extends Command
             return self::FAILURE;
         }
 
+        $this->offerToRemovePackage($remover);
+
         outro('All done! Your starter kit has been tailored.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Tailor is a one-time scaffolding tool, so once it has run there is nothing
+     * left for it to do. Offer to uninstall it so it does not linger as a dev
+     * dependency.
+     */
+    private function offerToRemovePackage(RemoveTailorPackage $remover): void
+    {
+        $remove = confirm(
+            label: 'Tailoring is done — remove the Tailor package now?',
+            default: false,
+            hint: 'Tailor is a one-time tool; we recommend removing it once you\'ve tailored your starter kit.',
+        );
+
+        if ($remove) {
+            $remover->execute($this->output);
+        }
     }
 }
