@@ -2,9 +2,9 @@
 
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Filesystem\Filesystem;
-use Onelegstudios\Tailor\Actions\PublishFluxIcons;
 use Onelegstudios\Tailor\Actions\ReplaceHeroicons;
 use Onelegstudios\Tailor\Kits\LucideKit;
+use Onelegstudios\Tailor\Services\PublishFluxIcons;
 use Onelegstudios\Tailor\Tests\Stubs\RecordingFluxIconCommand;
 
 beforeEach(function () {
