@@ -1,9 +1,15 @@
 <?php
 
-namespace Onelegstudios\Tailor\Actions;
+namespace Onelegstudios\Tailor\Services;
 
 use Illuminate\Filesystem\Filesystem;
 
+/**
+ * A multi-method Flux icon service. Unlike the single-purpose classes in
+ * Actions\ (each invoked via execute()), this exposes distinct operations
+ * (replacements(), applyAliases()) over the same icon set, so it lives under
+ * Services\ rather than Actions\.
+ */
 class PublishFluxIcons
 {
     /**

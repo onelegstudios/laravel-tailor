@@ -3,9 +3,9 @@
 namespace Onelegstudios\Tailor\Kits;
 
 use Illuminate\Console\OutputStyle;
-use Onelegstudios\Tailor\Actions\PublishFluxIcons;
 use Onelegstudios\Tailor\Actions\PublishLucideIcons;
 use Onelegstudios\Tailor\Actions\ReplaceHeroicons;
+use Onelegstudios\Tailor\Services\PublishFluxIcons;
 
 /**
  * Flux with Lucide Icons — swaps the starter kit's Heroicons for their Lucide
