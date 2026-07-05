@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Filesystem\Filesystem;
-use Onelegstudios\Tailor\Actions\PublishFluxIcons;
+use Onelegstudios\Tailor\Services\PublishFluxIcons;
 
 beforeEach(function () {
     $this->tempDir = sys_get_temp_dir().'/tailor-flux-icons-'.uniqid();
