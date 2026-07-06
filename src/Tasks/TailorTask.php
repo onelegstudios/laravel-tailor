@@ -6,7 +6,7 @@ use Illuminate\Console\OutputStyle;
 
 /**
  * An independent tailoring task the user can opt into alongside a UI kit. Each
- * task is registered in config('tailor.tasks') and resolved by its key().
+ * task is registered in config('tailor.registry.tasks') and resolved by its key().
  */
 interface TailorTask
 {

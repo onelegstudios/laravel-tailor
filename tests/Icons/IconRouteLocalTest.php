@@ -11,7 +11,7 @@ it('registers the icon route in local environment', function () {
 });
 
 it('renders the icon reference page', function () {
-    config()->set('tailor.icons', [
+    config()->set('tailor.settings.kits.lucide.icons', [
         'starter-kit' => [
             'heroicons' => [
                 'magnifying-glass' => 'search',

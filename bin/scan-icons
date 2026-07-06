@@ -3,10 +3,11 @@
 
 /*
  * Dev-only script: scan for the icon names the app needs and record them in
- * config/tailor.php under the `icons` key, split into sub-arrays by source.
+ * config/tailor.php under the Lucide kit's icons key
+ * (settings.kits.lucide.icons), split into sub-arrays by source.
  *
  * Tailor needs to know every icon that must be re-mapped when the user switches
- * UI kit. The `icons` key has two groups, each with two sub-groups:
+ * UI kit. That icons key has two groups, each with two sub-groups:
  *
  *   starter-kit          — icons the app's own views use (scanned from
  *                          tests/Fixtures):
@@ -35,7 +36,7 @@
  * raw <svg><path> embedded in the blade rather than via the icon system above
  * (e.g. sidebar/collapse's panel toggle, toast's close, the Pro editor toolbar).
  * These have no icon name to scan and no flux/icon/<name>.blade.php hook to
- * override, so they can't be captured here or remapped through config's icons key.
+ * override, so they can't be captured here or remapped through the icons key.
  * Re-skinning them would require overriding the whole component blade — out of
  * scope for this name-based scanner.
  *
@@ -75,8 +76,8 @@ $prune = $hasFlag('--prune', '-p');
 if ($help) {
     echo <<<'HELP'
         scan-icons — scan the starter-kit fixtures and Flux's components for the
-        icon names the app uses, and record them in config/tailor.php (grouped under
-        icons.starter-kit and icons.flux).
+        icon names the app uses, and record them in config/tailor.php under the
+        Lucide kit (grouped under settings.kits.lucide.icons: starter-kit and flux).
 
         Usage:
           bin/scan-icons [options]
@@ -253,8 +254,10 @@ if (! is_array($config)) {
 }
 
 // Icons are stored as associative arrays keyed by the icon name, with the value
-// reserved for its equivalent in the target UI kit (empty for now).
-$existingIcons = $config['icons'] ?? [];
+// reserved for its equivalent in the target UI kit (empty for now). They live
+// under the Lucide kit's own settings slice; HeroKit's `icons` key is hand-
+// maintained and left untouched.
+$existingIcons = $config['settings']['kits']['lucide']['icons'] ?? [];
 
 /**
  * Reconcile an existing group with the scanned names. Newly discovered names are
@@ -345,9 +348,8 @@ function reportGroups($stream, string $verb, array $groups): void
 
 // Build the would-be file once; both --check and the writer compare it to disk so
 // they agree on "out of sync" (new icons, formatting drift, or --prune staleness).
-$iconsBlock = "'icons' => ".exportPhp($merged, 1);
 $current = is_file($configFile) ? file_get_contents($configFile) : '';
-$contents = buildConfigContents($configFile, $iconsBlock);
+$contents = buildConfigContents($configFile, $merged);
 $changed = $contents !== $current;
 
 // --check: report drift and exit without writing.
@@ -405,15 +407,18 @@ function exportPhp(mixed $value, int $depth): string
 }
 
 /**
- * Find the `'icons' => [ ... ]` span in the config source by matching brackets
- * (ignoring any inside quoted strings). Returns the start offset at the icons
- * key and the length through the matching close bracket, or null if not found.
+ * Find the `'<key>' => [ ... ]` span in the config source by matching brackets
+ * (ignoring any inside quoted strings), searching from $from. Returns the start
+ * offset at the key and the length through the matching close bracket, or null
+ * if not found.
  *
  * @return array{0: int, 1: int}|null
  */
-function locateIconsSpan(string $source): ?array
+function locateKeySpan(string $source, string $key, int $from = 0): ?array
 {
-    if (preg_match('/([\'"])icons\1\s*=>\s*\[/', $source, $m, PREG_OFFSET_CAPTURE) !== 1) {
+    $pattern = '/([\'"])'.preg_quote($key, '/').'\1\s*=>\s*\[/';
+
+    if (preg_match($pattern, $source, $m, PREG_OFFSET_CAPTURE, $from) !== 1) {
         return null;
     }
 
@@ -445,14 +450,47 @@ function locateIconsSpan(string $source): ?array
 }
 
 /**
- * Build the would-be config file: the icons array spliced into (or inserted into)
- * the existing file, or a minimal stub when no file exists. Aborts on a file that
- * can't be read or has no `return [` array.
+ * Locate the Lucide kit's `icons` span. The search is scoped to the `lucide`
+ * block so HeroKit's own `icons` key (a sibling under settings.kits) is never
+ * matched. Returns absolute [start, length] into $source, or null if absent.
+ *
+ * @return array{0: int, 1: int}|null
  */
-function buildConfigContents(string $configFile, string $iconsBlock): string
+function locateLucideIconsSpan(string $source): ?array
 {
+    if (($lucide = locateKeySpan($source, 'lucide')) === null) {
+        return null;
+    }
+
+    $segment = substr($source, $lucide[0], $lucide[1]);
+
+    if (($icons = locateKeySpan($segment, 'icons')) === null) {
+        return null;
+    }
+
+    return [$lucide[0] + $icons[0], $icons[1]];
+}
+
+/**
+ * Build the would-be config file: the Lucide kit's icons array spliced into the
+ * existing file, or — when that block is absent — the whole settings scaffold
+ * inserted (or a minimal stub when no file exists). Aborts on a file that can't
+ * be read or has no `return [` array.
+ *
+ * @param  array<string, mixed>  $merged
+ */
+function buildConfigContents(string $configFile, array $merged): string
+{
+    // The icons key sits four levels deep (settings > kits > lucide > icons), so
+    // its own entries are indented to match when spliced in place.
+    $iconsBlock = "'icons' => ".exportPhp($merged, 4);
+
+    // Scaffold used when there's no Lucide icons block to replace: the full
+    // settings tree, printed as a top-level `settings` key (depth 1).
+    $scaffold = "'settings' => ".exportPhp(['kits' => ['lucide' => ['icons' => $merged]]], 1);
+
     if (! is_file($configFile)) {
-        return "<?php\n\n// config for Onelegstudios/Tailor\nreturn [\n    {$iconsBlock},\n];\n";
+        return "<?php\n\n// config for Onelegstudios/Tailor\nreturn [\n    {$scaffold},\n];\n";
     }
 
     $original = file_get_contents($configFile);
@@ -462,16 +500,17 @@ function buildConfigContents(string $configFile, string $iconsBlock): string
         exit(1);
     }
 
-    if (($span = locateIconsSpan($original)) !== null) {
-        // Replace the existing icons array in place.
+    if (($span = locateLucideIconsSpan($original)) !== null) {
+        // Replace the existing Lucide icons array in place.
         return substr_replace($original, $iconsBlock, $span[0], $span[1]);
     }
 
     if (preg_match('/\breturn\s*\[/', $original, $m, PREG_OFFSET_CAPTURE) === 1) {
-        // No icons key yet: insert one at the top of the returned array.
+        // No Lucide icons block yet: insert the settings scaffold at the top of
+        // the returned array.
         $at = $m[0][1] + strlen($m[0][0]);
 
-        return substr_replace($original, "\n    {$iconsBlock},", $at, 0);
+        return substr_replace($original, "\n    {$scaffold},", $at, 0);
     }
 
     fwrite(STDERR, "Could not find a 'return [' array in {$configFile} to update.\n");
