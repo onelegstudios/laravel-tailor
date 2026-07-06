@@ -1,5 +1,6 @@
 <?php
 
+use Onelegstudios\Tailor\Kits\AsIsKit;
 use Onelegstudios\Tailor\Kits\HeroKit;
 use Onelegstudios\Tailor\Kits\LucideKit;
 use Onelegstudios\Tailor\Kits\TallStackKit;
@@ -10,6 +11,7 @@ return [
     // Mutually exclusive UI kits, in the order they are offered. Add a kit by
     // implementing Onelegstudios\Tailor\Kits\UiKit and listing it here.
     'kits' => [
+        AsIsKit::class,
         HeroKit::class,
         LucideKit::class,
         TallStackKit::class,
@@ -27,6 +29,18 @@ return [
     'overrides' => [
         'kits' => 'App\\Tailor\\Kits',
         'tasks' => 'App\\Tailor\\Tasks',
+    ],
+
+    // The Heroicons kit reverses the starter kit's handful of Lucide overrides
+    // (see icons.starter-kit.lucide), swapping each back to the Heroicon that
+    // replaces it (lucide-name => heroicon-name) so the kit renders Heroicons
+    // throughout. Kept outside the `icons` key below, which bin/scan-icons
+    // regenerates wholesale. Edit these targets to taste.
+    'heroicons-kit' => [
+        'book-open-text' => 'book-open',
+        'chevrons-up-down' => 'chevron-up-down',
+        'folder-git-2' => 'folder',
+        'layout-grid' => 'squares-2x2',
     ],
 
     'icons' => [

@@ -4,7 +4,7 @@ namespace Onelegstudios\Tailor\Kits;
 
 use Illuminate\Console\OutputStyle;
 use Onelegstudios\Tailor\Actions\PublishLucideIcons;
-use Onelegstudios\Tailor\Actions\ReplaceHeroicons;
+use Onelegstudios\Tailor\Actions\ReplaceIcons;
 use Onelegstudios\Tailor\Services\PublishFluxIcons;
 
 /**
@@ -14,7 +14,7 @@ use Onelegstudios\Tailor\Services\PublishFluxIcons;
 class LucideKit implements UiKit
 {
     public function __construct(
-        private readonly ReplaceHeroicons $replaceHeroicons,
+        private readonly ReplaceIcons $replaceIcons,
         private readonly PublishLucideIcons $publishLucideIcons,
         private readonly PublishFluxIcons $publishFluxIcons,
     ) {}
@@ -57,7 +57,7 @@ class LucideKit implements UiKit
         // Only mutate the app once every icon is on disk, so a failed download
         // leaves the views and icon directory untouched rather than half-tailored.
         if ($failed === []) {
-            $this->replaceHeroicons->execute(resource_path('views'), $map);
+            $this->replaceIcons->execute(resource_path('views'), $map);
 
             // Starter-kit glyphs are referenced directly by their Lucide name, so
             // they must survive the Flux aliasing pass even when a Flux icon shares

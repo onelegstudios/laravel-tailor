@@ -17,7 +17,7 @@ use function Laravel\Prompts\warning;
 
 class TailorCommand extends Command
 {
-    public $signature = 'tailor {--ui-kit= : The UI kit to tailor to (hero, lucide, tall-stack); prompts when omitted}';
+    public $signature = 'tailor {--ui-kit= : The UI kit to tailor to (as-is, hero, lucide, tall-stack); prompts when omitted}';
 
     public $description = 'Tailor the livewire starter kit to your needs';
 
@@ -43,7 +43,7 @@ class TailorCommand extends Command
                 $uikit = select(
                     label: 'What UI kit do you want to use?',
                     options: array_map(fn ($kit) => $kit->label(), $kits),
-                    default: 'hero',
+                    default: 'as-is',
                     hint: 'Use the arrow keys to choose, enter to tailor.',
                 );
             } elseif (! isset($kits[$uikit])) {
