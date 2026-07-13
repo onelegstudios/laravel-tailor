@@ -25,6 +25,12 @@
  * Values: heroicons and flux.normal start empty (their Lucide equivalent is
  * filled in later). lucide and animated map to themselves (correct in any kit).
  *
+ * HeroKit (settings.kits.hero.icons) is kept in sync too: its key set mirrors the
+ * starter-kit.lucide overrides above, but each key maps to a Heroicon rather than
+ * itself. Only the *keys* are managed here — added when new overrides appear,
+ * removed with --prune — while the hand-picked Heroicon values are left alone
+ * (new keys seed empty, to fill in by hand).
+ *
  * Icons are referenced four ways in the Flux markup:
  *
  *   <flux:icon.chevron-down />          (component dot syntax)
@@ -328,6 +334,16 @@ foreach ($groups as $parent => $children) {
     }
 }
 
+// HeroKit's icons key (settings.kits.hero.icons) mirrors the *keys* of the
+// starter kit's Lucide overrides (settings.kits.lucide.icons.starter-kit.lucide):
+// the same icon names, but each mapped to its Heroicon equivalent instead of
+// itself. Keep that key set in sync with the overrides — appending new names and,
+// with --prune, dropping stale ones — while leaving the hand-picked Heroicon
+// values alone (new names seed empty, to be filled in by hand).
+$existingHeroIcons = $config['settings']['kits']['hero']['icons'] ?? [];
+[$mergedHero, $added['hero.icons'], $removed['hero.icons']] = mergeGroup($existingHeroIcons, array_values($lucide), $empty, $prune);
+$counts[] = count($mergedHero).' hero.icons';
+
 $summary = implode(', ', $counts);
 $totalNew = array_sum(array_map('count', $added));
 $totalStale = array_sum(array_map('count', $removed));
@@ -349,7 +365,7 @@ function reportGroups($stream, string $verb, array $groups): void
 // Build the would-be file once; both --check and the writer compare it to disk so
 // they agree on "out of sync" (new icons, formatting drift, or --prune staleness).
 $current = is_file($configFile) ? file_get_contents($configFile) : '';
-$contents = buildConfigContents($configFile, $merged);
+$contents = buildConfigContents($configFile, $merged, $mergedHero);
 $changed = $contents !== $current;
 
 // --check: report drift and exit without writing.
@@ -472,22 +488,51 @@ function locateLucideIconsSpan(string $source): ?array
 }
 
 /**
- * Build the would-be config file: the Lucide kit's icons array spliced into the
- * existing file, or — when that block is absent — the whole settings scaffold
- * inserted (or a minimal stub when no file exists). Aborts on a file that can't
- * be read or has no `return [` array.
+ * Locate HeroKit's `icons` span, scoped to the `hero` block so the Lucide kit's
+ * own `icons` key (a sibling under settings.kits) is never matched. Returns
+ * absolute [start, length] into $source, or null if absent.
+ *
+ * @return array{0: int, 1: int}|null
+ */
+function locateHeroIconsSpan(string $source): ?array
+{
+    if (($hero = locateKeySpan($source, 'hero')) === null) {
+        return null;
+    }
+
+    $segment = substr($source, $hero[0], $hero[1]);
+
+    if (($icons = locateKeySpan($segment, 'icons')) === null) {
+        return null;
+    }
+
+    return [$hero[0] + $icons[0], $icons[1]];
+}
+
+/**
+ * Build the would-be config file: the Lucide and Hero kits' icons arrays spliced
+ * into the existing file, or — when the Lucide block is absent — the whole
+ * settings scaffold inserted (or a minimal stub when no file exists). Aborts on a
+ * file that can't be read or has no `return [` array.
  *
  * @param  array<string, mixed>  $merged
+ * @param  array<string, string>  $heroIcons
  */
-function buildConfigContents(string $configFile, array $merged): string
+function buildConfigContents(string $configFile, array $merged, array $heroIcons): string
 {
-    // The icons key sits four levels deep (settings > kits > lucide > icons), so
-    // its own entries are indented to match when spliced in place.
+    // Both icons keys sit four levels deep (settings > kits > lucide|hero >
+    // icons), so their entries are indented to match when spliced in place.
     $iconsBlock = "'icons' => ".exportPhp($merged, 4);
+    $heroBlock = "'icons' => ".exportPhp($heroIcons, 4);
 
     // Scaffold used when there's no Lucide icons block to replace: the full
     // settings tree, printed as a top-level `settings` key (depth 1).
-    $scaffold = "'settings' => ".exportPhp(['kits' => ['lucide' => ['icons' => $merged]]], 1);
+    $scaffold = "'settings' => ".exportPhp([
+        'kits' => [
+            'hero' => ['icons' => $heroIcons],
+            'lucide' => ['icons' => $merged],
+        ],
+    ], 1);
 
     if (! is_file($configFile)) {
         return "<?php\n\n// config for Onelegstudios/Tailor\nreturn [\n    {$scaffold},\n];\n";
@@ -500,9 +545,24 @@ function buildConfigContents(string $configFile, array $merged): string
         exit(1);
     }
 
-    if (($span = locateLucideIconsSpan($original)) !== null) {
-        // Replace the existing Lucide icons array in place.
-        return substr_replace($original, $iconsBlock, $span[0], $span[1]);
+    if (($lucideSpan = locateLucideIconsSpan($original)) !== null) {
+        // Replace each kit's icons array in place. The Hero block may be absent
+        // (older config); splice whichever spans exist, from the end of the file
+        // backwards so each earlier span's offset stays valid after the edit.
+        $edits = [[$lucideSpan, $iconsBlock]];
+
+        if (($heroSpan = locateHeroIconsSpan($original)) !== null) {
+            $edits[] = [$heroSpan, $heroBlock];
+        }
+
+        usort($edits, fn (array $a, array $b): int => $b[0][0] <=> $a[0][0]);
+
+        $result = $original;
+        foreach ($edits as [$span, $block]) {
+            $result = substr_replace($result, $block, $span[0], $span[1]);
+        }
+
+        return $result;
     }
 
     if (preg_match('/\breturn\s*\[/', $original, $m, PREG_OFFSET_CAPTURE) === 1) {

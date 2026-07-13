@@ -63,10 +63,47 @@ it('groups icons into starter-kit and flux in config/tailor.php', function () us
     expect(array_intersect($starterKitNames, array_merge($normal, $animated)))->toBe([]);
 });
 
+it('mirrors the starter-kit lucide overrides in the hero kit', function () use ($root) {
+    $kits = (require $root.'/config/tailor.php')['settings']['kits'];
+
+    $lucideOverrides = array_keys($kits['lucide']['icons']['starter-kit']['lucide']);
+    $heroIcons = array_keys($kits['hero']['icons']);
+
+    // HeroKit's icons key must carry exactly the same names as the starter kit's
+    // Lucide overrides (scan-icons keeps the two key sets in lockstep).
+    sort($lucideOverrides);
+    sort($heroIcons);
+    expect($heroIcons)->toBe($lucideOverrides);
+});
+
 it('keeps config/tailor.php in sync with the fixtures', function () use ($root) {
     exec('php '.escapeshellarg($root.'/bin/scan-icons').' --check 2>&1', $output, $status);
 
     expect($status)->toBe(0, implode("\n", $output));
+});
+
+it('re-adds a missing hero-kit icon with an empty value', function () use ($root) {
+    $script = escapeshellarg($root.'/bin/scan-icons');
+    $configFile = $root.'/config/tailor.php';
+    $original = file_get_contents($configFile);
+
+    try {
+        // Drop one hero-kit mapping; it also lives in the Lucide overrides, so
+        // scan-icons should rediscover the name and re-add the key.
+        file_put_contents($configFile, preg_replace(
+            "/\s*'folder-git-2' => '[^']*',\n/",
+            "\n",
+            $original,
+            1
+        ));
+
+        exec("php {$script} 2>&1", $output, $status);
+        expect($status)->toBe(0)
+            ->and(implode("\n", $output))->toContain('hero.icons: folder-git-2')
+            ->and(file_get_contents($configFile))->toContain("'folder-git-2' => ''");
+    } finally {
+        file_put_contents($configFile, $original);
+    }
 });
 
 it('shows help for -h and --help without writing', function (string $flag) use ($root) {

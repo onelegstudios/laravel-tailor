@@ -44,8 +44,9 @@ return [
             // HeroKit (key: 'hero') — reverses the starter kit's handful of Lucide
             // overrides (see settings.kits.lucide.icons.starter-kit.lucide),
             // swapping each back to the Heroicon that replaces it (lucide-name =>
-            // heroicon-name) so the kit renders Heroicons throughout. Unlike the
-            // Lucide maps below, bin/scan-icons never touches these — edit to taste.
+            // heroicon-name) so the kit renders Heroicons throughout. bin/scan-icons
+            // keeps this key set in sync with those overrides but never fills in the
+            // Heroicon values — new keys arrive empty, so edit them to taste.
             'hero' => [
                 'icons' => [
                     'book-open-text' => 'book-open',
