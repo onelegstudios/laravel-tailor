@@ -12,7 +12,7 @@ it('is registered as the hero UI kit', function () {
 });
 
 it('swaps the configured Lucide icons back to Heroicons and drops their blades', function () {
-    config()->set('tailor.heroicons-kit', [
+    config()->set('tailor.settings.kits.hero.icons', [
         'book-open-text' => 'book-open',
         'layout-grid' => 'squares-2x2',
     ]);
@@ -33,7 +33,7 @@ it('swaps the configured Lucide icons back to Heroicons and drops their blades',
 });
 
 it('skips blank and self-mapping entries', function () {
-    config()->set('tailor.heroicons-kit', [
+    config()->set('tailor.settings.kits.hero.icons', [
         'book-open-text' => 'book-open',
         'chevrons-up-down' => '',          // no target — leave it in place
         'folder-git-2' => 'folder-git-2',  // maps to itself — nothing to swap
@@ -55,7 +55,7 @@ it('skips blank and self-mapping entries', function () {
 });
 
 it('ignores a malformed config entry instead of erroring', function () {
-    config()->set('tailor.heroicons-kit', [
+    config()->set('tailor.settings.kits.hero.icons', [
         'book-open-text' => 'book-open',
         'layout-grid' => ['not-a-string'],
     ]);
@@ -74,7 +74,7 @@ it('ignores a malformed config entry instead of erroring', function () {
 });
 
 it('does nothing when no Lucide icons are configured', function () {
-    config()->set('tailor.heroicons-kit', []);
+    config()->set('tailor.settings.kits.hero.icons', []);
 
     $replaceIcons = Mockery::mock(ReplaceIcons::class);
     $replaceIcons->shouldNotReceive('execute');

@@ -32,7 +32,7 @@ class HeroKit implements UiKit
 
     public function apply(?OutputStyle $output = null): array
     {
-        $map = config('tailor.heroicons-kit', []);
+        $map = config("tailor.settings.kits.{$this->key()}.icons", []);
 
         // Keep only the entries that actually rewrite something — a real string
         // target that differs from the source — so a blank or self-mapping entry

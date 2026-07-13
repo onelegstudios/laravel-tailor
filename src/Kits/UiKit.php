@@ -6,7 +6,7 @@ use Illuminate\Console\OutputStyle;
 
 /**
  * A mutually exclusive UI kit the user can tailor the starter kit to. Each kit
- * is registered in config('tailor.kits') and resolved by its key().
+ * is registered in config('tailor.registry.kits') and resolved by its key().
  */
 interface UiKit
 {

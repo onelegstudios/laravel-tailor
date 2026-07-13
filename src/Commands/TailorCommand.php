@@ -25,8 +25,8 @@ class TailorCommand extends Command
     {
         intro('Welcome to Tailor — let\'s customize your starter kit.');
 
-        $kits = $registry->resolve(config('tailor.kits', []), config('tailor.overrides.kits', ''), UiKit::class);
-        $tasks = $registry->resolve(config('tailor.tasks', []), config('tailor.overrides.tasks', ''), TailorTask::class);
+        $kits = $registry->resolve(config('tailor.registry.kits', []), config('tailor.registry.overrides.kits', ''), UiKit::class);
+        $tasks = $registry->resolve(config('tailor.registry.tasks', []), config('tailor.registry.overrides.tasks', ''), TailorTask::class);
 
         if ($kits === [] && $tasks === []) {
             warning('There is nothing to tailor — no UI kits or tasks are configured.');
