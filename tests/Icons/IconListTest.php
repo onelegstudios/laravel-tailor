@@ -3,7 +3,7 @@
 use Livewire\Livewire;
 
 beforeEach(function () {
-    config()->set('tailor.icons', [
+    config()->set('tailor.settings.kits.lucide.icons', [
         'starter-kit' => [
             'heroicons' => [
                 'magnifying-glass' => 'search',
@@ -41,7 +41,7 @@ it('renders the original heroicon glyph and the lucide replacement glyph', funct
 });
 
 it('renders an animated spinner for flux animated icons', function () {
-    config()->set('tailor.icons', [
+    config()->set('tailor.settings.kits.lucide.icons', [
         'flux' => [
             'animated' => ['loading' => 'loader-circle'],
         ],

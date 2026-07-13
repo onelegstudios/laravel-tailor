@@ -33,14 +33,15 @@ class LucideKit implements UiKit
     {
         $iconPath = resource_path('views/flux/icon');
 
-        $starterKit = config('tailor.icons.starter-kit', []);
+        $icons = config("tailor.settings.kits.{$this->key()}.icons", []);
+        $starterKit = $icons['starter-kit'] ?? [];
 
         // Flatten the grouped heroicon/lucide maps into a single lookup. The
         // leading [] keeps this safe when the config is empty, and filtering to
         // arrays ignores a malformed entry rather than raising a TypeError.
         $map = array_merge([], ...array_values(array_filter($starterKit, 'is_array')));
 
-        $flux = config('tailor.icons.flux', []);
+        $flux = $icons['flux'] ?? [];
         $normal = $flux['normal'] ?? [];
         $animated = $flux['animated'] ?? [];
 

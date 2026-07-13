@@ -48,7 +48,7 @@ it('defaults the UI kit to leaving the starter kit as-is', function () {
 });
 
 it('downloads the starter-kit Lucide icons when the Lucide kit is selected', function () {
-    config()->set('tailor.icons', [
+    config()->set('tailor.settings.kits.lucide.icons', [
         'starter-kit' => [
             'heroicons' => ['home' => 'house', 'trash' => 'trash-2'],
             'lucide' => ['layout-grid' => 'layout-dashboard', 'folder-git-2' => 'folder-git-2'],
@@ -75,7 +75,7 @@ it('downloads the starter-kit Lucide icons when the Lucide kit is selected', fun
 });
 
 it('downloads the Flux internal icons when the Lucide kit is selected', function () {
-    config()->set('tailor.icons', [
+    config()->set('tailor.settings.kits.lucide.icons', [
         'starter-kit' => ['heroicons' => [], 'lucide' => []],
         'flux' => [
             'normal' => ['eye-dropper' => 'pipette'],
@@ -132,7 +132,7 @@ it('fails when given an unknown --ui-kit', function () {
 });
 
 it('fails when an icon cannot be downloaded', function () {
-    config()->set('tailor.icons', [
+    config()->set('tailor.settings.kits.lucide.icons', [
         'starter-kit' => [
             'heroicons' => ['home' => 'house', 'trash' => 'trash-2'],
             'lucide' => [],
@@ -156,7 +156,7 @@ it('fails when an icon cannot be downloaded', function () {
 });
 
 it('skips the UI kit prompt and drops "else" when no kits are configured', function () {
-    config()->set('tailor.kits', []);
+    config()->set('tailor.registry.kits', []);
 
     $this->artisan('tailor')
         ->expectsChoice('What would you like to tailor?', [], [
@@ -167,7 +167,7 @@ it('skips the UI kit prompt and drops "else" when no kits are configured', funct
 });
 
 it('skips the task prompt when no tasks are configured', function () {
-    config()->set('tailor.tasks', []);
+    config()->set('tailor.registry.tasks', []);
 
     $this->artisan('tailor')
         ->expectsChoice('What UI kit do you want to use?', 'hero', [
@@ -181,8 +181,8 @@ it('skips the task prompt when no tasks are configured', function () {
 });
 
 it('warns and does nothing when neither kits nor tasks are configured', function () {
-    config()->set('tailor.kits', []);
-    config()->set('tailor.tasks', []);
+    config()->set('tailor.registry.kits', []);
+    config()->set('tailor.registry.tasks', []);
 
     $this->artisan('tailor')
         ->expectsOutputToContain('nothing to tailor')

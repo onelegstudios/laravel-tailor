@@ -27,7 +27,7 @@ it('is registered as the lucide UI kit', function () {
 });
 
 it('downloads the configured starter-kit and Flux icons in one pass', function () {
-    config()->set('tailor.icons', [
+    config()->set('tailor.settings.kits.lucide.icons', [
         'starter-kit' => [
             'heroicons' => ['home' => 'house', 'trash' => 'trash-2'],
             'lucide' => ['layout-grid' => 'layout-dashboard'],
@@ -46,7 +46,7 @@ it('downloads the configured starter-kit and Flux icons in one pass', function (
 });
 
 it('returns the icons that failed to download', function () {
-    config()->set('tailor.icons', [
+    config()->set('tailor.settings.kits.lucide.icons', [
         'starter-kit' => ['heroicons' => ['home' => 'house'], 'lucide' => []],
         'flux' => ['normal' => [], 'animated' => []],
     ]);
@@ -59,7 +59,7 @@ it('returns the icons that failed to download', function () {
 });
 
 it('does not rewrite the views when an icon fails to download', function () {
-    config()->set('tailor.icons', [
+    config()->set('tailor.settings.kits.lucide.icons', [
         'starter-kit' => ['heroicons' => ['home' => 'house'], 'lucide' => []],
         'flux' => ['normal' => [], 'animated' => []],
     ]);
@@ -74,7 +74,7 @@ it('does not rewrite the views when an icon fails to download', function () {
 });
 
 it('ignores a malformed starter-kit config entry instead of erroring', function () {
-    config()->set('tailor.icons', [
+    config()->set('tailor.settings.kits.lucide.icons', [
         'starter-kit' => [
             'heroicons' => ['home' => 'house'],
             'lucide' => ['layout-grid' => 'layout-dashboard'],
@@ -93,7 +93,7 @@ it('ignores a malformed starter-kit config entry instead of erroring', function 
 });
 
 it('does not alias flux icons when an icon fails to download', function () {
-    config()->set('tailor.icons', [
+    config()->set('tailor.settings.kits.lucide.icons', [
         'starter-kit' => ['heroicons' => ['home' => 'house'], 'lucide' => []],
         'flux' => ['normal' => [], 'animated' => []],
     ]);
@@ -109,7 +109,7 @@ it('does not alias flux icons when an icon fails to download', function () {
 });
 
 it('rewrites the views once every icon has downloaded', function () {
-    config()->set('tailor.icons', [
+    config()->set('tailor.settings.kits.lucide.icons', [
         'starter-kit' => ['heroicons' => ['home' => 'house'], 'lucide' => []],
         'flux' => ['normal' => [], 'animated' => []],
     ]);

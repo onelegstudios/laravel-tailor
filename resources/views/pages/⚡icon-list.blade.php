@@ -50,7 +50,7 @@ class extends Component
      */
     protected function allSections(): Collection
     {
-        return collect(config('tailor.icons', []))
+        return collect(config('tailor.settings.kits.lucide.icons', []))
             ->flatMap(fn (array $sets, string $group): array => collect($sets)
                 ->map(fn (array $icons, string $set): array => [
                     'group' => $group,
