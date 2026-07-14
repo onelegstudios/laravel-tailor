@@ -8,6 +8,9 @@ use Onelegstudios\Tailor\Services\PublishFluxIcons;
 use Onelegstudios\Tailor\Tests\Stubs\RecordingFluxIconCommand;
 
 beforeEach(function () {
+    // Isolate resource_path() from other parallel workers before capturing it.
+    $this->appBase = $this->isolateApplicationPaths();
+
     RecordingFluxIconCommand::reset();
     // Have the stub write into the directory the kit publishes to, so the
     // download-verification step sees the icons and reports no failures.
@@ -16,7 +19,7 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-    (new Filesystem)->deleteDirectory(resource_path('views/flux/icon'));
+    (new Filesystem)->deleteDirectory($this->appBase);
 });
 
 it('is registered as the lucide UI kit', function () {
