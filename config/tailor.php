@@ -3,7 +3,6 @@
 use Onelegstudios\Tailor\Kits\AsIsKit;
 use Onelegstudios\Tailor\Kits\HeroKit;
 use Onelegstudios\Tailor\Kits\LucideKit;
-use Onelegstudios\Tailor\Kits\TallStackKit;
 use Onelegstudios\Tailor\Tasks\MoveAuth;
 
 // config for Onelegstudios/Tailor
@@ -18,7 +17,6 @@ return [
             AsIsKit::class,
             HeroKit::class,
             LucideKit::class,
-            TallStackKit::class,
         ],
 
         // Independent tailoring tasks offered alongside the UI kit. Add a task by
