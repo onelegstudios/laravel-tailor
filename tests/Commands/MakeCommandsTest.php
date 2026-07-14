@@ -2,8 +2,14 @@
 
 use Illuminate\Support\Facades\File;
 
+beforeEach(function () {
+    // Isolate app_path() so the generated classes never land in the Testbench
+    // skeleton that other parallel workers share.
+    $this->appBase = $this->isolateApplicationPaths();
+});
+
 afterEach(function () {
-    File::deleteDirectory(app_path('Tailor'));
+    File::deleteDirectory($this->appBase);
 });
 
 it('scaffolds a UI kit class into the app', function () {

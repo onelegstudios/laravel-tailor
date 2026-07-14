@@ -6,6 +6,9 @@ use Onelegstudios\Tailor\Actions\RemoveTailorPackage;
 use Onelegstudios\Tailor\Tests\Stubs\RecordingFluxIconCommand;
 
 beforeEach(function () {
+    // Isolate resource_path() from other parallel workers before capturing it.
+    $this->appBase = $this->isolateApplicationPaths();
+
     RecordingFluxIconCommand::reset();
     // Have the stub write into the same directory the command publishes to, so
     // the download-verification step sees the icons and reports no failures.
@@ -14,7 +17,7 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-    (new Filesystem)->deleteDirectory(resource_path('views/flux/icon'));
+    (new Filesystem)->deleteDirectory($this->appBase);
 });
 
 it('asks about the UI kit first, then the remaining options', function () {
