@@ -20,7 +20,6 @@ php artisan tailor
 │ › Leave the starter kit as-is
 │   Flux with Heroicons
 │   Flux with Lucide Icons
-│   Tall Stack UI
 │
 ◇ What else would you like to tailor?
 │ ◻ Move the auth folder
@@ -61,7 +60,7 @@ php artisan tailor
 You'll be asked to pick a **UI kit** (mutually exclusive) and any number of additional **tasks**. To skip the kit prompt, pass it directly:
 
 ```bash
-php artisan tailor --ui-kit=lucide   # as-is | hero | lucide | tall-stack
+php artisan tailor --ui-kit=lucide   # as-is | hero | lucide
 ```
 
 ### Removing Tailor when you're done
@@ -76,20 +75,19 @@ composer remove oneleggedswede/laravel-tailor --dev
 
 ### Built-in kits
 
-| Key          | Label                       | What it does                                                            |
-| ------------ | --------------------------- | ----------------------------------------------------------------------- |
-| `as-is`      | Leave the starter kit as-is | The default — a no-op that leaves the icon set untouched.               |
-| `hero`       | Flux with Heroicons         | Swaps the starter kit's handful of Lucide icons back to Heroicons.      |
-| `lucide`     | Flux with Lucide Icons      | Replaces Heroicons with Lucide equivalents and re-aliases Flux's icons. |
-| `tall-stack` | Tall Stack UI               | Placeholder — not yet implemented.                                      |
+| Key      | Label                       | What it does                                                            |
+| -------- | --------------------------- | ----------------------------------------------------------------------- |
+| `as-is`  | Leave the starter kit as-is | The default — a no-op that leaves the icon set untouched.               |
+| `hero`   | Flux with Heroicons         | Swaps the starter kit's handful of Lucide icons back to Heroicons.      |
+| `lucide` | Flux with Lucide Icons      | Replaces Heroicons with Lucide equivalents and re-aliases Flux's icons. |
+
+The Lucide kit downloads every icon it needs before touching your app. If any download fails, your views and icon directory are left untouched rather than half-tailored, and the command exits with a non-zero status.
 
 ### Built-in tasks
 
-| Key         | Label                | What it does                       |
-| ----------- | -------------------- | ---------------------------------- |
-| `move-auth` | Move the auth folder | Placeholder — not yet implemented. |
-
-The Lucide kit downloads every icon it needs before touching your app. If any download fails, your views and icon directory are left untouched rather than half-tailored, and the command exits with a non-zero status.
+| Key         | Label                | What it does                                                                                                              |
+| ----------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `move-auth` | Move the auth folder | Moves the Fortify auth screens out of the Livewire `pages/auth` (or `livewire/auth`) folder into `views/auth` and repoints `FortifyServiceProvider::configureViews()` at the new view names. |
 
 ### Icon reference page
 
@@ -118,13 +116,17 @@ php artisan make:tailor-kit BootstrapKit    # -> app/Tailor/Kits/BootstrapKit.ph
 php artisan make:tailor-task RenameBrand    # -> app/Tailor/Tasks/RenameBrand.php
 ```
 
-Then register it in `config/tailor.php`:
+Then register it in `config/tailor.php` under `registry`:
 
 ```php
-'kits' => [
-    HeroKit::class,
-    LucideKit::class,
-    \App\Tailor\Kits\BootstrapKit::class,
+'registry' => [
+    'kits' => [
+        AsIsKit::class,
+        HeroKit::class,
+        LucideKit::class,
+        \App\Tailor\Kits\BootstrapKit::class,
+    ],
+    // 'tasks' => [ MoveAuth::class, \App\Tailor\Tasks\RenameBrand::class ],
 ],
 ```
 
@@ -135,17 +137,45 @@ A kit implements `Onelegstudios\Tailor\Kits\UiKit`; a task implements `Onelegstu
 Drop a class with the same short name into the override namespace and it runs instead of the package's version — no change to the config lists:
 
 ```php
-'overrides' => [
-    'kits'  => 'App\\Tailor\\Kits',   // App\Tailor\Kits\LucideKit overrides the package's LucideKit
-    'tasks' => 'App\\Tailor\\Tasks',
+'registry' => [
+    'overrides' => [
+        'kits'  => 'App\\Tailor\\Kits',   // App\Tailor\Kits\LucideKit overrides the package's LucideKit
+        'tasks' => 'App\\Tailor\\Tasks',
+    ],
 ],
 ```
 
 ## Testing
 
 ```bash
-composer test          # Pint + PHPStan + Pest
+composer test          # Pint (lint check) + PHPStan + Pest
 composer test-coverage # Pest with coverage
+```
+
+The individual steps can also be run on their own:
+
+```bash
+composer lint          # Fix code style with Pint (composer format is an alias)
+composer lint:check    # Check code style without changing files
+composer analyse       # Static analysis with PHPStan (composer types:check runs it with a raised memory limit)
+```
+
+### Maintenance scripts (`bin/`)
+
+Two dev-only helpers live in `bin/`. They are not part of the published package — they keep the test fixtures and icon config in sync during development, and should be run from the package root.
+
+| Script                 | What it does                                                                                                                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bin/download-fixtures` | Rebuilds `tests/Fixtures/starter-kits` from scratch by downloading the Livewire starter-kit variants (`main`, `components`, `teams`) used as test fixtures. Each variant's own top-level `tests/` dir is skipped, and the fixtures are only swapped into place once every download succeeds. Review with `git status` and commit afterwards. |
+| `bin/scan-icons`        | Scans the starter-kit fixtures and Flux's components for the icon names the app uses and records them in `config/tailor.php` (under `settings.kits.lucide.icons`, keeping `settings.kits.hero.icons` keys in sync). Append-only by default. |
+
+`bin/scan-icons` accepts a few flags:
+
+```bash
+bin/scan-icons            # add newly found icons; warn about stale ones
+bin/scan-icons --prune    # also remove config entries for icons no longer found
+bin/scan-icons --check    # report missing icons and exit 1 without writing (for CI)
+bin/scan-icons --help     # show full usage
 ```
 
 ## Changelog
