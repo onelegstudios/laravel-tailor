@@ -23,7 +23,6 @@ it('asks about the UI kit first, then the remaining options', function () {
             'as-is' => 'Leave the starter kit as-is',
             'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
-            'tall-stack' => 'Tall Stack UI',
         ])
         ->expectsChoice('What else would you like to tailor?', ['move-auth'], [
             'move-auth' => 'Move the auth folder',
@@ -38,7 +37,6 @@ it('defaults the UI kit to leaving the starter kit as-is', function () {
             'as-is' => 'Leave the starter kit as-is',
             'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
-            'tall-stack' => 'Tall Stack UI',
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
@@ -61,7 +59,6 @@ it('downloads the starter-kit Lucide icons when the Lucide kit is selected', fun
             'as-is' => 'Leave the starter kit as-is',
             'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
-            'tall-stack' => 'Tall Stack UI',
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
@@ -88,7 +85,6 @@ it('downloads the Flux internal icons when the Lucide kit is selected', function
             'as-is' => 'Leave the starter kit as-is',
             'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
-            'tall-stack' => 'Tall Stack UI',
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
@@ -147,7 +143,6 @@ it('fails when an icon cannot be downloaded', function () {
             'as-is' => 'Leave the starter kit as-is',
             'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
-            'tall-stack' => 'Tall Stack UI',
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
@@ -174,7 +169,6 @@ it('skips the task prompt when no tasks are configured', function () {
             'as-is' => 'Leave the starter kit as-is',
             'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
-            'tall-stack' => 'Tall Stack UI',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -195,7 +189,6 @@ it('downloads nothing when leaving the starter kit as-is', function () {
             'as-is' => 'Leave the starter kit as-is',
             'hero' => 'Flux with Heroicons',
             'lucide' => 'Flux with Lucide Icons',
-            'tall-stack' => 'Tall Stack UI',
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
