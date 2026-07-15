@@ -6,7 +6,7 @@ it('is registered as the as-is UI kit', function () {
     $kit = app(AsIsKit::class);
 
     expect($kit->key())->toBe('as-is')
-        ->and($kit->label())->toBe('Leave the starter kit as-is');
+        ->and($kit->label())->toBe('Flux with mixed icons');
 });
 
 it('leaves the starter kit untouched and reports no failures', function () {

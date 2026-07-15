@@ -26,7 +26,7 @@ it('is registered as the lucide UI kit', function () {
     $kit = app(LucideKit::class);
 
     expect($kit->key())->toBe('lucide')
-        ->and($kit->label())->toBe('Flux with Lucide Icons');
+        ->and($kit->label())->toBe('Flux with Lucide only');
 });
 
 it('downloads the configured starter-kit and Flux icons in one pass', function () {

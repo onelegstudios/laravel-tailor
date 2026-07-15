@@ -41,7 +41,7 @@ class TailorCommand extends Command
 
             if ($uikit === null) {
                 $uikit = select(
-                    label: 'What UI kit do you want to use?',
+                    label: 'Which icon set do you want?',
                     options: array_map(fn ($kit) => $kit->label(), $kits),
                     default: 'as-is',
                     hint: 'Use the arrow keys to choose, enter to tailor.',

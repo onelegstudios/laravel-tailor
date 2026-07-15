@@ -5,9 +5,9 @@ namespace Onelegstudios\Tailor\Kits;
 use Illuminate\Console\OutputStyle;
 
 /**
- * Leave the starter kit exactly as it ships — a deliberate no-op. Offered so the
- * user can run Tailor for its tasks (e.g. moving the auth folder) without
- * touching the mixed Heroicon/Lucide icon set the starter kit comes with.
+ * Keep the mixed Heroicon/Lucide icon set the starter kit ships with — a
+ * deliberate no-op. Offered so the user can run Tailor for its tasks (e.g.
+ * moving the auth folder) without touching the icon set at all.
  */
 class AsIsKit implements UiKit
 {
@@ -18,7 +18,7 @@ class AsIsKit implements UiKit
 
     public function label(): string
     {
-        return 'Leave the starter kit as-is';
+        return 'Flux with mixed icons';
     }
 
     public function apply(?OutputStyle $output = null): array
