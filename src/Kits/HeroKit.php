@@ -7,8 +7,8 @@ use Onelegstudios\Tailor\Actions\RemoveIcons;
 use Onelegstudios\Tailor\Actions\ReplaceIcons;
 
 /**
- * Flux with Heroicons — swaps the handful of Lucide icons the starter kit ships
- * (its local overrides under resources/views/flux/icon) back to their Heroicon
+ * Flux with Heroicons only — swaps the handful of Lucide icons the starter kit
+ * ships (its local overrides under resources/views/flux/icon) back to their Heroicon
  * equivalents, so the kit renders Heroicons throughout. The Heroicons Flux falls
  * back to are bundled with the package, so nothing needs downloading; the orphaned
  * Lucide blades are just removed once their references are rewritten.
@@ -27,7 +27,7 @@ class HeroKit implements UiKit
 
     public function label(): string
     {
-        return 'Flux with Heroicons';
+        return 'Flux with Heroicons only';
     }
 
     public function apply(?OutputStyle $output = null): array

@@ -8,7 +8,7 @@ it('is registered as the hero UI kit', function () {
     $kit = app(HeroKit::class);
 
     expect($kit->key())->toBe('hero')
-        ->and($kit->label())->toBe('Flux with Heroicons');
+        ->and($kit->label())->toBe('Flux with Heroicons only');
 });
 
 it('swaps the configured Lucide icons back to Heroicons and drops their blades', function () {

@@ -8,7 +8,7 @@ use Onelegstudios\Tailor\Actions\ReplaceIcons;
 use Onelegstudios\Tailor\Services\PublishFluxIcons;
 
 /**
- * Flux with Lucide Icons — swaps the starter kit's Heroicons for their Lucide
+ * Flux with Lucide only — swaps the starter kit's Heroicons for their Lucide
  * equivalents and re-aliases the icons Flux references internally.
  */
 class LucideKit implements UiKit
@@ -26,7 +26,7 @@ class LucideKit implements UiKit
 
     public function label(): string
     {
-        return 'Flux with Lucide Icons';
+        return 'Flux with Lucide only';
     }
 
     public function apply(?OutputStyle $output = null): array

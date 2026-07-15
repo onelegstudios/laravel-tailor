@@ -16,10 +16,10 @@ php artisan tailor
 ```
 ┌ Welcome to Tailor — let's customize your starter kit.
 │
-◇ What UI kit do you want to use?
-│ › Leave the starter kit as-is
-│   Flux with Heroicons
-│   Flux with Lucide Icons
+◇ Which icon set do you want?
+│ › Flux with mixed icons
+│   Flux with Heroicons only
+│   Flux with Lucide only
 │
 ◇ What else would you like to tailor?
 │ ◻ Move the auth folder
@@ -75,11 +75,11 @@ composer remove onelegstudios/laravel-tailor --dev
 
 ### Built-in kits
 
-| Key      | Label                       | What it does                                                            |
-| -------- | --------------------------- | ----------------------------------------------------------------------- |
-| `as-is`  | Leave the starter kit as-is | The default — a no-op that leaves the icon set untouched.               |
-| `hero`   | Flux with Heroicons         | Swaps the starter kit's handful of Lucide icons back to Heroicons.      |
-| `lucide` | Flux with Lucide Icons      | Replaces Heroicons with Lucide equivalents and re-aliases Flux's icons. |
+| Key      | Label                    | What it does                                                            |
+| -------- | ------------------------ | ----------------------------------------------------------------------- |
+| `as-is`  | Flux with mixed icons    | The default — a no-op that leaves the icon set untouched.               |
+| `hero`   | Flux with Heroicons only | Swaps the starter kit's handful of Lucide icons back to Heroicons.      |
+| `lucide` | Flux with Lucide only    | Replaces Heroicons with Lucide equivalents and re-aliases Flux's icons. |
 
 The Lucide kit downloads every icon it needs before touching your app. If any download fails, your views and icon directory are left untouched rather than half-tailored, and the command exits with a non-zero status.
 
