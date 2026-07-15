@@ -1,9 +1,9 @@
 # Laravel Tailor
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/oneleggedswede/laravel-tailor.svg?style=flat-square)](https://packagist.org/packages/oneleggedswede/laravel-tailor)
-[![GitHub Tests Action Status](https://github.com/oneleggedswede/laravel-tailor/actions/workflows/run-tests.yml/badge.svg)](https://github.com/oneleggedswede/laravel-tailor/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://github.com/oneleggedswede/laravel-tailor/actions/workflows/fix-php-code-style-issues.yml/badge.svg)](https://github.com/oneleggedswede/laravel-tailor/actions?query=workflow%3A%22Fix+PHP+code+style+issues%22+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/oneleggedswede/laravel-tailor.svg?style=flat-square)](https://packagist.org/packages/oneleggedswede/laravel-tailor)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/onelegstudios/laravel-tailor.svg?style=flat-square)](https://packagist.org/packages/onelegstudios/laravel-tailor)
+[![GitHub Tests Action Status](https://github.com/onelegstudios/laravel-tailor/actions/workflows/run-tests.yml/badge.svg)](https://github.com/onelegstudios/laravel-tailor/actions?query=workflow%3Arun-tests+branch%3Amain)
+[![GitHub Code Style Action Status](https://github.com/onelegstudios/laravel-tailor/actions/workflows/fix-php-code-style-issues.yml/badge.svg)](https://github.com/onelegstudios/laravel-tailor/actions?query=workflow%3A%22Fix+PHP+code+style+issues%22+branch%3Amain)
+[![Total Downloads](https://img.shields.io/packagist/dt/onelegstudios/laravel-tailor.svg?style=flat-square)](https://packagist.org/packages/onelegstudios/laravel-tailor)
 
 Tailor the [Laravel Livewire starter kit](https://laravel.com/docs/starter-kits) to your taste. Run a single interactive command to swap the kit's icon set, apply optional tweaks, and keep everything consistent — no hand-editing Blade views or hunting down icon names.
 
@@ -38,7 +38,7 @@ php artisan tailor
 Install the package via Composer:
 
 ```bash
-composer require oneleggedswede/laravel-tailor --dev
+composer require onelegstudios/laravel-tailor --dev
 ```
 
 > Tailor is a development-time scaffolding tool, so `--dev` is recommended.
@@ -70,7 +70,7 @@ Tailor is a one-time scaffolding tool — once it has tailored your starter kit 
 The `tailor` command offers to do this for you: after tailoring finishes it asks whether you'd like to remove the package, and if you confirm it runs the uninstall for you. You can always remove it manually instead:
 
 ```bash
-composer remove oneleggedswede/laravel-tailor --dev
+composer remove onelegstudios/laravel-tailor --dev
 ```
 
 ### Built-in kits
@@ -85,8 +85,8 @@ The Lucide kit downloads every icon it needs before touching your app. If any do
 
 ### Built-in tasks
 
-| Key         | Label                | What it does                                                                                                              |
-| ----------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Key         | Label                | What it does                                                                                                                                                                                 |
+| ----------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `move-auth` | Move the auth folder | Moves the Fortify auth screens out of the Livewire `pages/auth` (or `livewire/auth`) folder into `views/auth` and repoints `FortifyServiceProvider::configureViews()` at the new view names. |
 
 ### Icon reference page
@@ -164,10 +164,10 @@ composer analyse       # Static analysis with PHPStan (composer types:check runs
 
 Two dev-only helpers live in `bin/`. They are not part of the published package — they keep the test fixtures and icon config in sync during development, and should be run from the package root.
 
-| Script                 | What it does                                                                                                                                                                                             |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Script                  | What it does                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `bin/download-fixtures` | Rebuilds `tests/Fixtures/starter-kits` from scratch by downloading the Livewire starter-kit variants (`main`, `components`, `teams`) used as test fixtures. Each variant's own top-level `tests/` dir is skipped, and the fixtures are only swapped into place once every download succeeds. Review with `git status` and commit afterwards. |
-| `bin/scan-icons`        | Scans the starter-kit fixtures and Flux's components for the icon names the app uses and records them in `config/tailor.php` (under `settings.kits.lucide.icons`, keeping `settings.kits.hero.icons` keys in sync). Append-only by default. |
+| `bin/scan-icons`        | Scans the starter-kit fixtures and Flux's components for the icon names the app uses and records them in `config/tailor.php` (under `settings.kits.lucide.icons`, keeping `settings.kits.hero.icons` keys in sync). Append-only by default.                                                                                                  |
 
 `bin/scan-icons` accepts a few flags:
 
@@ -192,7 +192,7 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 ## Credits
 
-- [Henrik Persson](https://github.com/oneleggedswede)
+- [Henrik Persson](https://github.com/onelegstudios)
 - [All Contributors](../../contributors)
 
 ## License
