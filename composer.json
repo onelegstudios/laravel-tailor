@@ -2,9 +2,16 @@
     "name": "onelegstudios/laravel-tailor",
     "description": "Tailor the Laravel Livewire starter kit to your taste. Run a single interactive command to swap the kit's icon set, apply optional tweaks, and keep everything consistent — no hand-editing Blade views or hunting down icon names.",
     "keywords": [
-        "onelegstudios",
         "laravel",
-        "laravel-tailor"
+        "livewire",
+        "flux",
+        "fluxui",
+        "starter-kit",
+        "icons",
+        "heroicons",
+        "lucide",
+        "scaffolding",
+        "dev"
     ],
     "homepage": "https://github.com/onelegstudios/laravel-tailor",
     "license": "MIT",
