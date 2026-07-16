@@ -97,3 +97,16 @@ it('reports progress and warns about icons that fail to download', function () {
         ->toContain('failed to download: search')
         ->not->toContain('failed to download: house');
 });
+
+it('leaves Laravel Prompts rendering to the command output after downloading', function () {
+    RecordingFluxIconCommand::$targetDir = $this->tempDir;
+
+    $buffer = new BufferedOutput;
+    $output = new OutputStyle(new ArrayInput([]), $buffer);
+
+    $this->action->execute($this->tempDir, ['house'], $output);
+
+    // Artisan::call() re-points Prompts at the NullOutput it is handed, which
+    // would leave every prompt after the download invisible.
+    expect(promptOutput())->toBe($output);
+});

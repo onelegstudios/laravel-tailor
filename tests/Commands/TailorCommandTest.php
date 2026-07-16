@@ -47,6 +47,21 @@ it('runs the selected move-components task', function () {
         ->assertSuccessful();
 });
 
+it('announces each task as it runs so a slow task does not look like a hang', function () {
+    $this->artisan('tailor', ['--ui-kit' => 'as-is'])
+        ->expectsChoice('What else would you like to tailor?', ['move-auth', 'move-components'], [
+            'move-auth' => 'Move the auth folder',
+            'move-components' => 'Move non-routed pages components',
+            'group-components' => 'Group components into subfolders',
+        ])
+        ->expectsOutputToContain('Move the auth folder...')
+        ->expectsOutputToContain('✓ Move the auth folder')
+        ->expectsOutputToContain('Move non-routed pages components...')
+        ->expectsOutputToContain('✓ Move non-routed pages components')
+        ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
+        ->assertSuccessful();
+});
+
 it('defaults the UI kit to leaving the starter kit as-is', function () {
     $this->artisan('tailor')
         ->expectsChoice('Which icon set do you want?', 'as-is', [

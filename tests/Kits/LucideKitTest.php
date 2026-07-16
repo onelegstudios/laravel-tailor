@@ -1,11 +1,14 @@
 <?php
 
+use Illuminate\Console\OutputStyle;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Filesystem\Filesystem;
 use Onelegstudios\Tailor\Actions\ReplaceIcons;
 use Onelegstudios\Tailor\Kits\LucideKit;
 use Onelegstudios\Tailor\Services\PublishFluxIcons;
 use Onelegstudios\Tailor\Tests\Stubs\RecordingFluxIconCommand;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 
 beforeEach(function () {
     // Isolate resource_path() from other parallel workers before capturing it.
@@ -109,6 +112,37 @@ it('does not alias flux icons when an icon fails to download', function () {
     $this->app->instance(PublishFluxIcons::class, $publishFluxIcons);
 
     app(LucideKit::class)->apply();
+});
+
+it('reports progress while rewriting the views after the download', function () {
+    config()->set('tailor.settings.kits.lucide.icons', [
+        'starter-kit' => ['heroicons' => ['home' => 'house'], 'lucide' => []],
+        'flux' => ['normal' => [], 'animated' => []],
+    ]);
+
+    $buffer = new BufferedOutput;
+
+    app(LucideKit::class)->apply(new OutputStyle(new ArrayInput([]), $buffer));
+
+    expect($buffer->fetch())
+        ->toContain('Updating icon references in your views...')
+        ->toContain('Aliasing the icons Flux references internally...')
+        ->toContain('Your starter kit now uses Lucide icons.');
+});
+
+it('stays silent about the rewrite when an icon fails to download', function () {
+    config()->set('tailor.settings.kits.lucide.icons', [
+        'starter-kit' => ['heroicons' => ['home' => 'house'], 'lucide' => []],
+        'flux' => ['normal' => [], 'animated' => []],
+    ]);
+
+    RecordingFluxIconCommand::$fail = ['house'];
+
+    $buffer = new BufferedOutput;
+
+    app(LucideKit::class)->apply(new OutputStyle(new ArrayInput([]), $buffer));
+
+    expect($buffer->fetch())->not->toContain('Updating icon references in your views...');
 });
 
 it('rewrites the views once every icon has downloaded', function () {

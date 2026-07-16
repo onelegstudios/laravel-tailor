@@ -70,7 +70,16 @@ class TailorCommand extends Command
         }
 
         foreach ($selected as $key) {
-            $tasks[$key]->apply($this->output);
+            $task = $tasks[$key];
+
+            // Tasks do their work silently, so announce each one — otherwise a
+            // slow task looks like the command has hung.
+            $this->output->newLine();
+            $this->output->writeln('<info>'.$task->label().'...</info>');
+
+            $task->apply($this->output);
+
+            $this->output->writeln('<info>✓ '.$task->label().'</info>');
         }
 
         if ($failed !== []) {
