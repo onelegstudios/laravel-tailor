@@ -56,9 +56,15 @@ class TailorCommand extends Command
         $selected = [];
 
         if ($tasks !== []) {
+            $options = array_map(fn ($task) => $task->label(), $tasks);
+
+            // Offered alphabetically — the list is for scanning, and the order
+            // tasks run in is the registry's, applied below.
+            asort($options);
+
             $selected = multiselect(
                 label: $kits === [] ? 'What would you like to tailor?' : 'What else would you like to tailor?',
-                options: array_map(fn ($task) => $task->label(), $tasks),
+                options: $options,
                 hint: 'Use space to select, enter to confirm.',
             );
         }

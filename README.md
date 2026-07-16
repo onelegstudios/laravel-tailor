@@ -22,10 +22,10 @@ php artisan tailor
 │   Flux with Lucide only
 │
 ◇ What else would you like to tailor?
-│ ◻ Move the auth folder
-│ ◻ Move non-routed pages components
 │ ◻ Convert partials into components
 │ ◻ Group components into subfolders
+│ ◻ Move non-routed pages components
+│ ◻ Move the auth folder
 │
 └ All done! Your starter kit has been tailored.
 ```
@@ -88,7 +88,7 @@ The Lucide kit downloads every icon it needs before touching your app. If any do
 
 ### Built-in tasks
 
-Tasks run in the order below whichever way you tick the boxes — `group-components` sorts what `move-components` and `convert-partials` leave at the root of `components/`, so it has to run last.
+The prompt lists these alphabetically, but they run in the order below whichever way you tick the boxes — `group-components` sorts what `move-components` and `convert-partials` leave at the root of `components/`, so it has to run last.
 
 | Key               | Label                          | What it does                                                                                                                                                                                                                                                     |
 | ----------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
