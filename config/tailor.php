@@ -3,6 +3,7 @@
 use Onelegstudios\Tailor\Kits\AsIsKit;
 use Onelegstudios\Tailor\Kits\HeroKit;
 use Onelegstudios\Tailor\Kits\LucideKit;
+use Onelegstudios\Tailor\Tasks\GroupComponents;
 use Onelegstudios\Tailor\Tasks\MoveAuth;
 use Onelegstudios\Tailor\Tasks\MoveComponents;
 
@@ -25,6 +26,7 @@ return [
         'tasks' => [
             MoveAuth::class,
             MoveComponents::class,
+            GroupComponents::class,
         ],
 
         // App namespaces checked for overrides. A class here with the same short
@@ -122,10 +124,46 @@ return [
             ],
         ],
 
-        // Per-task settings, keyed by each task's key(). No task needs any yet;
-        // add a block here when a task grows configurable options.
+        // Per-task settings, keyed by each task's key(). A task reads its own slice
+        // with config("tailor.settings.tasks.{$this->key()}...."), so the config
+        // location is derivable from the task rather than memorized.
         'tasks' => [
+            // GroupComponents (key: 'group-components') — the subfolder each flat
+            // component at the root of views/components is sorted into, as folder =>
+            // the component names it holds. The folder name is the dotted prefix the
+            // component picks up, so `branding` makes app-logo render as
+            // <x-branding.app-logo>; rename a folder here and the rewrite follows.
             //
+            // Only the root of components/ is sorted — a component already in a
+            // subfolder is already grouped. A root component missing from every list
+            // stays where it is and is reported at the end of the run, so listing a
+            // component your kit doesn't ship is harmless (it simply never matches),
+            // but a component you add is yours to place here.
+            'group-components' => [
+                'groups' => [
+                    'branding' => [
+                        'app-logo',
+                        'app-logo-icon',
+                    ],
+                    'auth' => [
+                        'auth-header',
+                        'auth-session-status',
+                        'passkey-registration',
+                        'passkey-verify',
+                    ],
+                    'navigation' => [
+                        'desktop-user-menu',
+                    ],
+                    'teams' => [
+                        'create-team-modal',
+                        'team-invitation-alert',
+                        'team-switcher',
+                    ],
+                    'ui' => [
+                        'placeholder-pattern',
+                    ],
+                ],
+            ],
         ],
     ],
 ];
