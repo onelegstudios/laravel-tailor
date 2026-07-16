@@ -32,6 +32,7 @@ it('asks about the UI kit first, then the remaining options', function () {
             'move-components' => 'Move non-routed pages components',
             'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
+            'remove-flux-overrides' => 'Remove published Flux overrides',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -44,6 +45,7 @@ it('runs the selected move-components task', function () {
             'move-components' => 'Move non-routed pages components',
             'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
+            'remove-flux-overrides' => 'Remove published Flux overrides',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -64,6 +66,7 @@ it('runs the selected tasks in registry order rather than the order they were se
             'move-components' => 'Move non-routed pages components',
             'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
+            'remove-flux-overrides' => 'Remove published Flux overrides',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -81,6 +84,7 @@ it('announces each task as it runs so a slow task does not look like a hang', fu
             'move-components' => 'Move non-routed pages components',
             'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
+            'remove-flux-overrides' => 'Remove published Flux overrides',
         ])
         ->expectsOutputToContain('Move the auth folder...')
         ->expectsOutputToContain('✓ Move the auth folder')
@@ -102,6 +106,7 @@ it('defaults the UI kit to leaving the starter kit as-is', function () {
             'move-components' => 'Move non-routed pages components',
             'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
+            'remove-flux-overrides' => 'Remove published Flux overrides',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -127,6 +132,7 @@ it('downloads the starter-kit Lucide icons when the Lucide kit is selected', fun
             'move-components' => 'Move non-routed pages components',
             'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
+            'remove-flux-overrides' => 'Remove published Flux overrides',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -156,6 +162,7 @@ it('downloads the Flux internal icons when the Lucide kit is selected', function
             'move-components' => 'Move non-routed pages components',
             'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
+            'remove-flux-overrides' => 'Remove published Flux overrides',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -171,6 +178,7 @@ it('uses the --ui-kit option instead of prompting for the UI kit', function () {
             'move-components' => 'Move non-routed pages components',
             'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
+            'remove-flux-overrides' => 'Remove published Flux overrides',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -189,6 +197,7 @@ it('removes the package when the user confirms after tailoring', function () {
             'move-components' => 'Move non-routed pages components',
             'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
+            'remove-flux-overrides' => 'Remove published Flux overrides',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'yes')
         ->assertSuccessful();
@@ -223,6 +232,7 @@ it('fails when an icon cannot be downloaded', function () {
             'move-components' => 'Move non-routed pages components',
             'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
+            'remove-flux-overrides' => 'Remove published Flux overrides',
         ])
         ->assertFailed();
 });
@@ -236,6 +246,7 @@ it('skips the UI kit prompt and drops "else" when no kits are configured', funct
             'move-components' => 'Move non-routed pages components',
             'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
+            'remove-flux-overrides' => 'Remove published Flux overrides',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -275,6 +286,7 @@ it('downloads nothing when leaving the starter kit as-is', function () {
             'move-components' => 'Move non-routed pages components',
             'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
+            'remove-flux-overrides' => 'Remove published Flux overrides',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -289,6 +301,7 @@ it('downloads nothing when the Heroicons kit is selected', function () {
             'move-components' => 'Move non-routed pages components',
             'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
+            'remove-flux-overrides' => 'Remove published Flux overrides',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();

@@ -26,6 +26,7 @@ php artisan tailor
 │ ◻ Group components into subfolders
 │ ◻ Move non-routed pages components
 │ ◻ Move the auth folder
+│ ◻ Remove published Flux overrides
 │
 └ All done! Your starter kit has been tailored.
 ```
@@ -96,6 +97,7 @@ The prompt lists these alphabetically, but they run in the order below whichever
 | `move-components` | Move non-routed pages components | Moves the Livewire page components under `resources/views/pages/` that aren't directly routed (plus the anonymous `settings/layout`) into `resources/views/components/`, preserving subpaths, and rewrites every `pages::` reference in your views and tests to the bare name. The `auth/` folder is left to the `move-auth` task. |
 | `convert-partials` | Convert partials into components | Moves everything under `resources/views/partials/` into `resources/views/components/`, preserving subpaths, and rewrites every `@include('partials.head')` in your views and tests to the `<x-head />` tag it now resolves as. A partial that reads a variable from the view including it gains an `@props` declaration and every caller passes the variable in. See [Converting partials](#converting-partials) for those variables and what's left alone. |
 | `group-components` | Group components into subfolders | Sorts the flat components at the root of `resources/views/components/` into a subfolder per concern and rewrites every `<x-name>` reference in your views and tests to the dotted name it now resolves as — `app-logo.blade.php` becomes `branding/app-logo.blade.php`, and `<x-app-logo>` becomes `<x-branding.app-logo>`. Runs after `move-components`, which is what fills that folder. See [Grouping components](#grouping-components) to change the folders. |
+| `remove-flux-overrides` | Remove published Flux overrides | Deletes the Flux components the starter kit publishes into `resources/views/flux/`, so each one renders as Flux ships it rather than as the kit restyled it. Out of the box that's `navlist/group`, which gives the sidebar group heading its Flux styling and RTL handling back. The icons in `flux/icon/` are left alone. See [Removing Flux overrides](#removing-flux-overrides) to change the list. |
 
 #### Converting partials
 
@@ -168,6 +170,32 @@ A few things worth knowing:
 - `head` and `settings-heading` only reach the root of `components/` when [`convert-partials`](#converting-partials) runs. They're listed for the run that opts into both tasks, and never match otherwise.
 - References are matched on the `<x-` / `</x-` tag prefix, which keeps the rewrite off Alpine's `x-` attributes and off any Flux component sharing a name. A component referenced dynamically (`<x-dynamic-component :component="$name" />`, `view('components.app-logo')`) can't be matched and will need a hand-edit.
 - Re-running is a no-op, and an existing target is never clobbered.
+
+#### Removing Flux overrides
+
+The starter kit publishes a handful of Flux's own components into `resources/views/flux/` and restyles them — the published `navlist/group` gives the sidebar group heading a smaller, lighter heading than Flux's and drops the `rtl:rotate-180` on its chevron. A published blade wins over the package's, so those edits are what you see until the file is gone. `remove-flux-overrides` reads which ones to delete from `settings.tasks.remove-flux-overrides.views` in the published config, named the way Flux addresses them:
+
+```php
+'settings' => [
+    'tasks' => [
+        'remove-flux-overrides' => [
+            'views' => [
+                'navlist/group',
+            ],
+        ],
+    ],
+],
+```
+
+A few things worth knowing:
+
+- `navlist/group` is `resources/views/flux/navlist/group.blade.php`. Add any other override your kit publishes; listing one it doesn't is harmless, as a view that isn't on disk is skipped.
+- Only what's listed is removed. The icons the [`lucide` kit](#built-in-kits) publishes into `flux/icon/` live in the same folder and are never touched.
+- A folder left empty by the last view removed from it goes too, but `flux/` itself stays — it's where the next publish lands.
+- Nothing references these blades by name, so there's no rewrite pass: Flux resolves the component from the package again the moment the file is gone.
+- The compiled views are cleared for you at the end of the task, and they have to be. This is the one task that rewrites nothing, so no view's mtime moves and Blade won't recompile the parents on its own — and with [Blaze](https://github.com/livewire/blaze) installed a stale parent has the override *folded into it by path*, so once that path is gone the component renders as **nothing at all** rather than falling back to Flux's. A silently vanishing sidebar group is the symptom.
+- This is a one-way trade of the kit's styling for Flux's — the deleted blade is the only copy of the kit's edits, so reach for git if you want it back. `php artisan flux:publish navlist.group` re-publishes Flux's own copy, which is a starting point for your own edits, not the kit's.
+- Re-running is a no-op.
 
 ### Icon reference page
 
