@@ -23,10 +23,11 @@ return [
         ],
 
         // Independent tailoring tasks offered alongside the UI kit, in the order
-        // they are offered and run — a selection is always applied in this order,
-        // so a task that feeds another (grouping sorts what moving and converting
-        // leave at the root of components/) goes after it here. Add a task by
-        // implementing Onelegstudios\Tailor\Tasks\TailorTask and listing it here.
+        // they run — the prompt offers them alphabetically, but a selection is
+        // always applied in this order, so a task that feeds another (grouping
+        // sorts what moving and converting leave at the root of components/) goes
+        // after it here. Add a task by implementing
+        // Onelegstudios\Tailor\Tasks\TailorTask and listing it here.
         'tasks' => [
             MoveAuth::class,
             MoveComponents::class,
