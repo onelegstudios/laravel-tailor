@@ -23,6 +23,7 @@ php artisan tailor
 │
 ◇ What else would you like to tailor?
 │ ◻ Move the auth folder
+│ ◻ Move non-routed pages components
 │
 └ All done! Your starter kit has been tailored.
 ```
@@ -85,9 +86,10 @@ The Lucide kit downloads every icon it needs before touching your app. If any do
 
 ### Built-in tasks
 
-| Key         | Label                | What it does                                                                                                                                                                                 |
-| ----------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `move-auth` | Move the auth folder | Moves the Fortify auth screens out of the Livewire `pages/auth` (or `livewire/auth`) folder into `views/auth` and repoints `FortifyServiceProvider::configureViews()` at the new view names. |
+| Key               | Label                          | What it does                                                                                                                                                                                                                                                     |
+| ----------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `move-auth`       | Move the auth folder           | Moves the Fortify auth screens out of the Livewire `pages/auth` (or `livewire/auth`) folder into `views/auth` and repoints `FortifyServiceProvider::configureViews()` at the new view names.                                                                      |
+| `move-components` | Move non-routed pages components | Moves the Livewire page components under `resources/views/pages/` that aren't directly routed (plus the anonymous `settings/layout`) into `resources/views/components/`, preserving subpaths, and rewrites every `pages::` reference in your views and tests to the bare name. The `auth/` folder is left to the `move-auth` task. |
 
 ### Icon reference page
 

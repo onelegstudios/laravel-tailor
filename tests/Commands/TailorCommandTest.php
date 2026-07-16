@@ -29,6 +29,17 @@ it('asks about the UI kit first, then the remaining options', function () {
         ])
         ->expectsChoice('What else would you like to tailor?', ['move-auth'], [
             'move-auth' => 'Move the auth folder',
+            'move-components' => 'Move non-routed pages components',
+        ])
+        ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
+        ->assertSuccessful();
+});
+
+it('runs the selected move-components task', function () {
+    $this->artisan('tailor', ['--ui-kit' => 'as-is'])
+        ->expectsChoice('What else would you like to tailor?', ['move-components'], [
+            'move-auth' => 'Move the auth folder',
+            'move-components' => 'Move non-routed pages components',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -43,6 +54,7 @@ it('defaults the UI kit to leaving the starter kit as-is', function () {
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
+            'move-components' => 'Move non-routed pages components',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -65,6 +77,7 @@ it('downloads the starter-kit Lucide icons when the Lucide kit is selected', fun
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
+            'move-components' => 'Move non-routed pages components',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -91,6 +104,7 @@ it('downloads the Flux internal icons when the Lucide kit is selected', function
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
+            'move-components' => 'Move non-routed pages components',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -103,6 +117,7 @@ it('uses the --ui-kit option instead of prompting for the UI kit', function () {
     $this->artisan('tailor', ['--ui-kit' => 'hero'])
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
+            'move-components' => 'Move non-routed pages components',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -118,6 +133,7 @@ it('removes the package when the user confirms after tailoring', function () {
     $this->artisan('tailor', ['--ui-kit' => 'hero'])
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
+            'move-components' => 'Move non-routed pages components',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'yes')
         ->assertSuccessful();
@@ -149,6 +165,7 @@ it('fails when an icon cannot be downloaded', function () {
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
+            'move-components' => 'Move non-routed pages components',
         ])
         ->assertFailed();
 });
@@ -159,6 +176,7 @@ it('skips the UI kit prompt and drops "else" when no kits are configured', funct
     $this->artisan('tailor')
         ->expectsChoice('What would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
+            'move-components' => 'Move non-routed pages components',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -195,6 +213,7 @@ it('downloads nothing when leaving the starter kit as-is', function () {
         ])
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
+            'move-components' => 'Move non-routed pages components',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
@@ -206,6 +225,7 @@ it('downloads nothing when the Heroicons kit is selected', function () {
     $this->artisan('tailor', ['--ui-kit' => 'hero'])
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
+            'move-components' => 'Move non-routed pages components',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
