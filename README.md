@@ -24,6 +24,7 @@ php artisan tailor
 ◇ What else would you like to tailor?
 │ ◻ Move the auth folder
 │ ◻ Move non-routed pages components
+│ ◻ Group components into subfolders
 │
 └ All done! Your starter kit has been tailored.
 ```
@@ -90,6 +91,37 @@ The Lucide kit downloads every icon it needs before touching your app. If any do
 | ----------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `move-auth`       | Move the auth folder           | Moves the Fortify auth screens out of the `pages/auth` folder into `views/auth` and repoints `FortifyServiceProvider::configureViews()` at the new view names. The components kit's `livewire/auth` folder stays where it is.                                                                      |
 | `move-components` | Move non-routed pages components | Moves the Livewire page components under `resources/views/pages/` that aren't directly routed (plus the anonymous `settings/layout`) into `resources/views/components/`, preserving subpaths, and rewrites every `pages::` reference in your views and tests to the bare name. The `auth/` folder is left to the `move-auth` task. |
+| `group-components` | Group components into subfolders | Sorts the flat components at the root of `resources/views/components/` into a subfolder per concern and rewrites every `<x-name>` reference in your views and tests to the dotted name it now resolves as — `app-logo.blade.php` becomes `branding/app-logo.blade.php`, and `<x-app-logo>` becomes `<x-branding.app-logo>`. Runs after `move-components`, which is what fills that folder. See [Grouping components](#grouping-components) to change the folders. |
+
+#### Grouping components
+
+`group-components` reads its folders from `settings.tasks.group-components.groups` in the published config — a map of folder name to the components it holds:
+
+```php
+'settings' => [
+    'tasks' => [
+        'group-components' => [
+            'groups' => [
+                'branding' => ['app-logo', 'app-logo-icon'],
+                'auth' => ['auth-header', 'auth-session-status', 'passkey-registration', 'passkey-verify'],
+                'navigation' => ['desktop-user-menu'],
+                'teams' => ['create-team-modal', 'team-invitation-alert', 'team-switcher'],
+                'ui' => ['placeholder-pattern'],
+            ],
+        ],
+    ],
+],
+```
+
+The folder name **is** the dotted prefix the component picks up, so renaming `branding` to `brand` here is all it takes to have the components render as `<x-brand.app-logo>` — the rewrite follows.
+
+A few things worth knowing:
+
+- Only the root of `components/` is sorted. A component already in a subfolder — like the `settings/layout` that `move-components` puts there — is already grouped and is left alone.
+- A root component that isn't listed under any folder **stays where it is** and is reported at the end of the run, so your own components are never guessed at. Add them to a folder above to have them sorted.
+- Listing a component your kit doesn't ship is harmless: it simply never matches. The defaults cover all three starter-kit variants, `teams` included.
+- References are matched on the `<x-` / `</x-` tag prefix, which keeps the rewrite off Alpine's `x-` attributes and off any Flux component sharing a name. A component referenced dynamically (`<x-dynamic-component :component="$name" />`, `view('components.app-logo')`) can't be matched and will need a hand-edit.
+- Re-running is a no-op, and an existing target is never clobbered.
 
 ### Icon reference page
 
@@ -133,6 +165,8 @@ Then register it in `config/tailor.php` under `registry`:
 ```
 
 A kit implements `Onelegstudios\Tailor\Kits\UiKit`; a task implements `Onelegstudios\Tailor\Tasks\TailorTask`. Both expose a `key()`, a `label()`, and an `apply()` method that returns an array of items it couldn't apply (an empty array means success).
+
+If your kit or task needs options of its own, put them under `settings.kits.{key}` or `settings.tasks.{key}` and read them with `config("tailor.settings.tasks.{$this->key()}.your-option")` — keying on `key()` means the config location is derivable from the class rather than memorized. The built-in `lucide` and `group-components` are the worked examples.
 
 ### Override a built-in
 
