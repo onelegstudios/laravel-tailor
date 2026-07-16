@@ -3,6 +3,7 @@
 use Onelegstudios\Tailor\Kits\AsIsKit;
 use Onelegstudios\Tailor\Kits\HeroKit;
 use Onelegstudios\Tailor\Kits\LucideKit;
+use Onelegstudios\Tailor\Tasks\ConvertPartials;
 use Onelegstudios\Tailor\Tasks\GroupComponents;
 use Onelegstudios\Tailor\Tasks\MoveAuth;
 use Onelegstudios\Tailor\Tasks\MoveComponents;
@@ -21,11 +22,15 @@ return [
             LucideKit::class,
         ],
 
-        // Independent tailoring tasks offered alongside the UI kit. Add a task by
+        // Independent tailoring tasks offered alongside the UI kit, in the order
+        // they are offered and run — a selection is always applied in this order,
+        // so a task that feeds another (grouping sorts what moving and converting
+        // leave at the root of components/) goes after it here. Add a task by
         // implementing Onelegstudios\Tailor\Tasks\TailorTask and listing it here.
         'tasks' => [
             MoveAuth::class,
             MoveComponents::class,
+            ConvertPartials::class,
             GroupComponents::class,
         ],
 
@@ -128,6 +133,26 @@ return [
         // with config("tailor.settings.tasks.{$this->key()}...."), so the config
         // location is derivable from the task rather than memorized.
         'tasks' => [
+            // ConvertPartials (key: 'convert-partials') — the variables each partial
+            // reads from the view that includes it, as partial name => its props.
+            // An @include shares the caller's scope and a component does not, so a
+            // partial listed here gains an @props declaration and every caller
+            // passes the variable in explicitly: head reading $title makes
+            // @include('partials.head') become <x-head :title="$title ?? null" />.
+            //
+            // A partial missing from this list converts to a tag with no attributes,
+            // which is right for one that reads nothing (settings-heading) and
+            // silently wrong for one that reads something — so a partial your kit
+            // adds is yours to list here. Listing a partial your kit doesn't ship is
+            // harmless; it simply never matches.
+            'convert-partials' => [
+                'props' => [
+                    'head' => [
+                        'title',
+                    ],
+                ],
+            ],
+
             // GroupComponents (key: 'group-components') — the subfolder each flat
             // component at the root of views/components is sorted into, as folder =>
             // the component names it holds. The folder name is the dotted prefix the
@@ -139,6 +164,10 @@ return [
             // stays where it is and is reported at the end of the run, so listing a
             // component your kit doesn't ship is harmless (it simply never matches),
             // but a component you add is yours to place here.
+            //
+            // head and settings-heading only reach the root when convert-partials
+            // runs, so they are listed for the run that opts into both tasks and
+            // simply never match otherwise.
             'group-components' => [
                 'groups' => [
                     'branding' => [
@@ -151,8 +180,14 @@ return [
                         'passkey-registration',
                         'passkey-verify',
                     ],
+                    'layout' => [
+                        'head',
+                    ],
                     'navigation' => [
                         'desktop-user-menu',
+                    ],
+                    'settings' => [
+                        'settings-heading',
                     ],
                     'teams' => [
                         'create-team-modal',

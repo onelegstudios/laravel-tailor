@@ -30,6 +30,7 @@ it('asks about the UI kit first, then the remaining options', function () {
         ->expectsChoice('What else would you like to tailor?', ['move-auth'], [
             'move-auth' => 'Move the auth folder',
             'move-components' => 'Move non-routed pages components',
+            'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
@@ -41,10 +42,36 @@ it('runs the selected move-components task', function () {
         ->expectsChoice('What else would you like to tailor?', ['move-components'], [
             'move-auth' => 'Move the auth folder',
             'move-components' => 'Move non-routed pages components',
+            'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
         ->assertSuccessful();
+});
+
+it('runs the selected tasks in registry order rather than the order they were selected', function () {
+    $files = new Filesystem;
+    $files->ensureDirectoryExists(resource_path('views/layouts'));
+    $files->ensureDirectoryExists(resource_path('views/partials'));
+    $files->put(resource_path('views/partials/head.blade.php'), '<title>{{ $title }}</title>');
+    $files->put(resource_path('views/layouts/app.blade.php'), "@include('partials.head')");
+
+    // Prompts returns the keys in the order they were toggled, so selecting
+    // group-components first is what a user ticking bottom-up produces.
+    $this->artisan('tailor', ['--ui-kit' => 'as-is'])
+        ->expectsChoice('What else would you like to tailor?', ['group-components', 'convert-partials'], [
+            'move-auth' => 'Move the auth folder',
+            'move-components' => 'Move non-routed pages components',
+            'convert-partials' => 'Convert partials into components',
+            'group-components' => 'Group components into subfolders',
+        ])
+        ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
+        ->assertSuccessful();
+
+    // Grouping only sees head if convert-partials ran first and put it at the root.
+    expect(file_exists(resource_path('views/components/layout/head.blade.php')))->toBeTrue()
+        ->and(file_get_contents(resource_path('views/layouts/app.blade.php')))
+        ->toBe('<x-layout.head :title="$title ?? null" />');
 });
 
 it('announces each task as it runs so a slow task does not look like a hang', function () {
@@ -52,6 +79,7 @@ it('announces each task as it runs so a slow task does not look like a hang', fu
         ->expectsChoice('What else would you like to tailor?', ['move-auth', 'move-components'], [
             'move-auth' => 'Move the auth folder',
             'move-components' => 'Move non-routed pages components',
+            'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
         ])
         ->expectsOutputToContain('Move the auth folder...')
@@ -72,6 +100,7 @@ it('defaults the UI kit to leaving the starter kit as-is', function () {
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
             'move-components' => 'Move non-routed pages components',
+            'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
@@ -96,6 +125,7 @@ it('downloads the starter-kit Lucide icons when the Lucide kit is selected', fun
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
             'move-components' => 'Move non-routed pages components',
+            'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
@@ -124,6 +154,7 @@ it('downloads the Flux internal icons when the Lucide kit is selected', function
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
             'move-components' => 'Move non-routed pages components',
+            'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
@@ -138,6 +169,7 @@ it('uses the --ui-kit option instead of prompting for the UI kit', function () {
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
             'move-components' => 'Move non-routed pages components',
+            'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
@@ -155,6 +187,7 @@ it('removes the package when the user confirms after tailoring', function () {
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
             'move-components' => 'Move non-routed pages components',
+            'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'yes')
@@ -188,6 +221,7 @@ it('fails when an icon cannot be downloaded', function () {
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
             'move-components' => 'Move non-routed pages components',
+            'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
         ])
         ->assertFailed();
@@ -200,6 +234,7 @@ it('skips the UI kit prompt and drops "else" when no kits are configured', funct
         ->expectsChoice('What would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
             'move-components' => 'Move non-routed pages components',
+            'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
@@ -238,6 +273,7 @@ it('downloads nothing when leaving the starter kit as-is', function () {
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
             'move-components' => 'Move non-routed pages components',
+            'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
@@ -251,6 +287,7 @@ it('downloads nothing when the Heroicons kit is selected', function () {
         ->expectsChoice('What else would you like to tailor?', [], [
             'move-auth' => 'Move the auth folder',
             'move-components' => 'Move non-routed pages components',
+            'convert-partials' => 'Convert partials into components',
             'group-components' => 'Group components into subfolders',
         ])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')

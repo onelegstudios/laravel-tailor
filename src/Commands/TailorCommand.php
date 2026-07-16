@@ -69,8 +69,15 @@ class TailorCommand extends Command
             $failed = $kits[$uikit]->apply($this->output);
         }
 
-        foreach ($selected as $key) {
-            $task = $tasks[$key];
+        // Driven by $tasks, not $selected: tasks depend on each other (grouping
+        // sorts what moving and converting leave at the root of components/), and
+        // Prompts returns the keys in the order the user toggled them. Iterating
+        // the registry is what makes the run order the configured one whichever
+        // way the boxes were ticked.
+        foreach ($tasks as $key => $task) {
+            if (! in_array($key, $selected, true)) {
+                continue;
+            }
 
             // Tasks do their work silently, so announce each one — otherwise a
             // slow task looks like the command has hung.
