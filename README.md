@@ -24,6 +24,7 @@ php artisan tailor
 ◇ What else would you like to tailor?
 │ ◻ Move the auth folder
 │ ◻ Move non-routed pages components
+│ ◻ Convert partials into components
 │ ◻ Group components into subfolders
 │
 └ All done! Your starter kit has been tailored.
@@ -87,11 +88,53 @@ The Lucide kit downloads every icon it needs before touching your app. If any do
 
 ### Built-in tasks
 
+Tasks run in the order below whichever way you tick the boxes — `group-components` sorts what `move-components` and `convert-partials` leave at the root of `components/`, so it has to run last.
+
 | Key               | Label                          | What it does                                                                                                                                                                                                                                                     |
 | ----------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `move-auth`       | Move the auth folder           | Moves the Fortify auth screens out of the `pages/auth` folder into `views/auth` and repoints `FortifyServiceProvider::configureViews()` at the new view names. The components kit's `livewire/auth` folder stays where it is.                                                                      |
 | `move-components` | Move non-routed pages components | Moves the Livewire page components under `resources/views/pages/` that aren't directly routed (plus the anonymous `settings/layout`) into `resources/views/components/`, preserving subpaths, and rewrites every `pages::` reference in your views and tests to the bare name. The `auth/` folder is left to the `move-auth` task. |
+| `convert-partials` | Convert partials into components | Moves everything under `resources/views/partials/` into `resources/views/components/`, preserving subpaths, and rewrites every `@include('partials.head')` in your views and tests to the `<x-head />` tag it now resolves as. A partial that reads a variable from the view including it gains an `@props` declaration and every caller passes the variable in. See [Converting partials](#converting-partials) for those variables and what's left alone. |
 | `group-components` | Group components into subfolders | Sorts the flat components at the root of `resources/views/components/` into a subfolder per concern and rewrites every `<x-name>` reference in your views and tests to the dotted name it now resolves as — `app-logo.blade.php` becomes `branding/app-logo.blade.php`, and `<x-app-logo>` becomes `<x-branding.app-logo>`. Runs after `move-components`, which is what fills that folder. See [Grouping components](#grouping-components) to change the folders. |
+
+#### Converting partials
+
+An `@include` shares the variables of the view that includes it; a component does not. So `convert-partials` reads the variables each partial needs from `settings.tasks.convert-partials.props` in the published config — a map of partial name to the props it declares:
+
+```php
+'settings' => [
+    'tasks' => [
+        'convert-partials' => [
+            'props' => [
+                'head' => ['title'],
+            ],
+        ],
+    ],
+],
+```
+
+That's what turns `partials/head.blade.php`, which renders `$title` it inherited from the layout, into a component that declares it:
+
+```blade
+@props(['title' => null])
+
+<title>{{ filled($title ?? null) ? ... }}</title>
+```
+
+and every caller into one that passes it:
+
+```blade
+<x-head :title="$title ?? null" />
+```
+
+A few things worth knowing:
+
+- A partial missing from `props` converts to a bare tag — right for one that reads nothing (`settings-heading`), silently wrong for one that reads something, so list your own partials here.
+- Only a plain, dataless `@include` is converted. A partial referenced any other way — `@include('partials.head', ['title' => 'Dashboard'])`, `@includeWhen`, a `view('partials.head')` call — is left **entirely** alone, file and references both, and reported at the end of the run: those forms pass or withhold scope in ways a tag can't be assumed to reproduce, so they're never guessed at. Convert them by hand, or make the include dataless and re-run.
+- Partials land at the root of `components/`, so opting into `group-components` as well sorts them like any other component: `head` into `layout/` and `settings-heading` into `settings/` by default, rendering as `<x-layout.head />` and `<x-settings.settings-heading />`. A partial of your own needs a folder there too, or it stays at the root and is reported as ungrouped.
+- Subpaths are preserved: `partials/nested/meta.blade.php` becomes `components/nested/meta.blade.php` and renders as `<x-nested.meta>`.
+- The `partials/` folder is removed once it's empty, and kept if an unconvertible partial is still in it.
+- Re-running is a no-op, and an existing target is never clobbered.
 
 #### Grouping components
 
@@ -104,7 +147,9 @@ The Lucide kit downloads every icon it needs before touching your app. If any do
             'groups' => [
                 'branding' => ['app-logo', 'app-logo-icon'],
                 'auth' => ['auth-header', 'auth-session-status', 'passkey-registration', 'passkey-verify'],
+                'layout' => ['head'],
                 'navigation' => ['desktop-user-menu'],
+                'settings' => ['settings-heading'],
                 'teams' => ['create-team-modal', 'team-invitation-alert', 'team-switcher'],
                 'ui' => ['placeholder-pattern'],
             ],
@@ -120,6 +165,7 @@ A few things worth knowing:
 - Only the root of `components/` is sorted. A component already in a subfolder — like the `settings/layout` that `move-components` puts there — is already grouped and is left alone.
 - A root component that isn't listed under any folder **stays where it is** and is reported at the end of the run, so your own components are never guessed at. Add them to a folder above to have them sorted.
 - Listing a component your kit doesn't ship is harmless: it simply never matches. The defaults cover all three starter-kit variants, `teams` included.
+- `head` and `settings-heading` only reach the root of `components/` when [`convert-partials`](#converting-partials) runs. They're listed for the run that opts into both tasks, and never match otherwise.
 - References are matched on the `<x-` / `</x-` tag prefix, which keeps the rewrite off Alpine's `x-` attributes and off any Flux component sharing a name. A component referenced dynamically (`<x-dynamic-component :component="$name" />`, `view('components.app-logo')`) can't be matched and will need a hand-edit.
 - Re-running is a no-op, and an existing target is never clobbered.
 
