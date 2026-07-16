@@ -53,18 +53,17 @@ it('moves the pages auth folder and repoints the provider', function () {
         ->not->toContain('pages::auth.');
 });
 
-it('moves the livewire auth folder and repoints the provider', function () {
+it('leaves the livewire auth folder and the provider alone', function () {
     seedAuthFolder($this->views, 'livewire', ['login', 'register']);
     seedProvider($this->provider, 'livewire.auth.');
 
     $moved = $this->action->execute($this->views, $this->provider);
 
-    expect($moved)->toBeTrue()
-        ->and(is_dir($this->views.'/livewire/auth'))->toBeFalse()
-        ->and(file_exists($this->views.'/auth/login.blade.php'))->toBeTrue()
-        ->and(file_get_contents($this->provider))
-        ->toContain("view('auth.login')")
-        ->not->toContain('livewire.auth.');
+    expect($moved)->toBeFalse()
+        ->and(file_exists($this->views.'/livewire/auth/login.blade.php'))->toBeTrue()
+        ->and(file_exists($this->views.'/livewire/auth/register.blade.php'))->toBeTrue()
+        ->and(is_dir($this->views.'/auth'))->toBeFalse()
+        ->and(file_get_contents($this->provider))->toContain("view('livewire.auth.login')");
 });
 
 it('does nothing when no auth folder exists', function () {
