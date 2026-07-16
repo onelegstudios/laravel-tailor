@@ -4,6 +4,7 @@ use Onelegstudios\Tailor\Kits\AsIsKit;
 use Onelegstudios\Tailor\Kits\HeroKit;
 use Onelegstudios\Tailor\Kits\LucideKit;
 use Onelegstudios\Tailor\Tasks\MoveAuth;
+use Onelegstudios\Tailor\Tasks\MoveComponents;
 
 // config for Onelegstudios/Tailor
 return [
@@ -23,6 +24,7 @@ return [
         // implementing Onelegstudios\Tailor\Tasks\TailorTask and listing it here.
         'tasks' => [
             MoveAuth::class,
+            MoveComponents::class,
         ],
 
         // App namespaces checked for overrides. A class here with the same short
@@ -120,7 +122,7 @@ return [
             ],
         ],
 
-        // Per-task settings, keyed by each task's key(). MoveAuth needs none yet;
+        // Per-task settings, keyed by each task's key(). No task needs any yet;
         // add a block here when a task grows configurable options.
         'tasks' => [
             //
