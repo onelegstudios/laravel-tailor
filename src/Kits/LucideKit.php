@@ -58,12 +58,19 @@ class LucideKit implements UiKit
         // Only mutate the app once every icon is on disk, so a failed download
         // leaves the views and icon directory untouched rather than half-tailored.
         if ($failed === []) {
+            $output?->newLine();
+            $output?->writeln('<info>Updating icon references in your views...</info>');
+
             $this->replaceIcons->execute(resource_path('views'), $map);
+
+            $output?->writeln('<info>Aliasing the icons Flux references internally...</info>');
 
             // Starter-kit glyphs are referenced directly by their Lucide name, so
             // they must survive the Flux aliasing pass even when a Flux icon shares
             // the same replacement.
             $this->publishFluxIcons->applyAliases($iconPath, $normal, $animated, array_values($map));
+
+            $output?->writeln('<info>✓ Your starter kit now uses Lucide icons.</info>');
         }
 
         return $failed;

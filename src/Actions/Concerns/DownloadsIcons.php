@@ -4,6 +4,7 @@ namespace Onelegstudios\Tailor\Actions\Concerns;
 
 use Illuminate\Console\OutputStyle;
 use Illuminate\Support\Facades\Artisan;
+use Laravel\Prompts\Prompt;
 use Symfony\Component\Console\Output\NullOutput;
 
 trait DownloadsIcons
@@ -53,6 +54,15 @@ trait DownloadsIcons
 
             $marker = $downloaded ? '<info>✓</info>' : '<fg=red>✗</>';
             $output?->writeln(sprintf('  [%d/%d] %s %s', $index + 1, $total, $marker, $icon));
+        }
+
+        // Running a command through Artisan::call() re-points Laravel Prompts at
+        // the output that call was given — the NullOutput above — and never puts
+        // it back. Left alone, every later prompt would render into nothing while
+        // still reading keystrokes, so the command would look hung. Point Prompts
+        // back at our own output now the fetches are done.
+        if ($output instanceof OutputStyle) {
+            Prompt::setOutput($output);
         }
 
         if ($failed !== []) {
