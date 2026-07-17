@@ -7,6 +7,7 @@ use Onelegstudios\Tailor\Tasks\ConvertPartials;
 use Onelegstudios\Tailor\Tasks\GroupComponents;
 use Onelegstudios\Tailor\Tasks\MoveAuth;
 use Onelegstudios\Tailor\Tasks\MoveComponents;
+use Onelegstudios\Tailor\Tasks\RemoveFluxOverrides;
 
 // config for Onelegstudios/Tailor
 return [
@@ -33,6 +34,7 @@ return [
             MoveComponents::class,
             ConvertPartials::class,
             GroupComponents::class,
+            RemoveFluxOverrides::class,
         ],
 
         // App namespaces checked for overrides. A class here with the same short
@@ -198,6 +200,23 @@ return [
                     'ui' => [
                         'placeholder-pattern',
                     ],
+                ],
+            ],
+
+            // RemoveFluxOverrides (key: 'remove-flux-overrides') — the Flux
+            // components the starter kit publishes into resources/views/flux, named
+            // the way Flux addresses them: navlist/group is
+            // flux/navlist/group.blade.php. Each one listed here is deleted, so the
+            // component renders as Flux ships it rather than as the kit restyled it.
+            //
+            // Only what is listed is removed — the icons the lucide kit publishes
+            // into flux/icon live in the same folder and are not this task's to
+            // touch. A view missing from disk is skipped, so listing an override
+            // your kit doesn't publish is harmless; one it does publish is yours to
+            // add here.
+            'remove-flux-overrides' => [
+                'views' => [
+                    'navlist/group',
                 ],
             ],
         ],
