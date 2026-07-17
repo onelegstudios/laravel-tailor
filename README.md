@@ -31,262 +31,33 @@ php artisan tailor
 └ All done! Your starter kit has been tailored.
 ```
 
-## Requirements
+## Quick start
 
-- PHP 8.3+
-- Laravel 13
-- A Livewire + [Flux](https://fluxui.dev) starter kit (required for the icon-swapping kits)
-
-## Installation
-
-Install the package via Composer:
+Requires PHP 8.3+, Laravel 13, and a Livewire + [Flux](https://fluxui.dev) starter kit.
 
 ```bash
 composer require onelegstudios/laravel-tailor --dev
-```
-
-> Tailor is a development-time scaffolding tool, so `--dev` is recommended.
-
-Optionally publish the config file to customize the available kits, tasks, and icon mappings:
-
-```bash
-php artisan vendor:publish --tag="tailor-config"
-```
-
-## Usage
-
-Run the interactive command and follow the prompts:
-
-```bash
+php artisan vendor:publish --tag="tailor-config"   # optional — but worth it before you run
 php artisan tailor
 ```
 
-You'll be asked to pick a **UI kit** (mutually exclusive) and any number of additional **tasks**. To skip the kit prompt, pass it directly:
+The config is where you say which glyph replaces which, what your components end up called, and what you're offered in the first place. It's worth a skim before a one-time tool rewrites your views — see [Publish the config first](docs/usage.md#publish-the-config-first).
 
-```bash
-php artisan tailor --ui-kit=lucide   # as-is | hero | lucide
-```
+> [!IMPORTANT]
+> **Run Tailor on a starter kit you've just installed**, before you've built on it. It rewrites views in place and can't tell your work from the kit's — some steps delete files, all of them are one-way, and none are undone by running it again. On an app you've already built, commit first. See [Run it on a fresh starter kit](docs/usage.md#run-it-on-a-fresh-starter-kit).
 
-### Removing Tailor when you're done
+Tailor is a one-time scaffolding tool, so remove it once you're done — the command offers to do that for you when it finishes.
 
-Tailor is a one-time scaffolding tool — once it has tailored your starter kit there is nothing left for it to do. **We recommend removing the package after you've run the command** so it doesn't linger as a dev dependency.
+## Documentation
 
-The `tailor` command offers to do this for you: after tailoring finishes it asks whether you'd like to remove the package, and if you confirm it runs the uninstall for you. You can always remove it manually instead:
-
-```bash
-composer remove onelegstudios/laravel-tailor --dev
-```
-
-### Built-in kits
-
-| Key      | Label                    | What it does                                                            |
-| -------- | ------------------------ | ----------------------------------------------------------------------- |
-| `as-is`  | Flux with mixed icons    | The default — a no-op that leaves the icon set untouched.               |
-| `hero`   | Flux with Heroicons only | Swaps the starter kit's handful of Lucide icons back to Heroicons.      |
-| `lucide` | Flux with Lucide only    | Replaces Heroicons with Lucide equivalents and re-aliases Flux's icons. |
-
-The Lucide kit downloads every icon it needs before touching your app. If any download fails, your views and icon directory are left untouched rather than half-tailored, and the command exits with a non-zero status.
-
-### Built-in tasks
-
-The prompt lists these alphabetically, but they run in the order below whichever way you tick the boxes — `group-components` sorts what `move-components` and `convert-partials` leave at the root of `components/`, so it has to run last.
-
-| Key               | Label                          | What it does                                                                                                                                                                                                                                                     |
-| ----------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `move-auth`       | Move the auth folder           | Moves the Fortify auth screens out of the `pages/auth` folder into `views/auth` and repoints `FortifyServiceProvider::configureViews()` at the new view names. The components kit's `livewire/auth` folder stays where it is.                                                                      |
-| `move-components` | Move non-routed pages components | Moves the Livewire page components under `resources/views/pages/` that aren't directly routed (plus the anonymous `settings/layout`) into `resources/views/components/`, preserving subpaths, and rewrites every `pages::` reference in your views and tests to the bare name. The `auth/` folder is left to the `move-auth` task. |
-| `convert-partials` | Convert partials into components | Moves everything under `resources/views/partials/` into `resources/views/components/`, preserving subpaths, and rewrites every `@include('partials.head')` in your views and tests to the `<x-head />` tag it now resolves as. A partial that reads a variable from the view including it gains an `@props` declaration and every caller passes the variable in. See [Converting partials](#converting-partials) for those variables and what's left alone. |
-| `group-components` | Group components into subfolders | Sorts the flat components at the root of `resources/views/components/` into a subfolder per concern and rewrites every `<x-name>` reference in your views and tests to the dotted name it now resolves as — `app-logo.blade.php` becomes `branding/app-logo.blade.php`, and `<x-app-logo>` becomes `<x-branding.app-logo>`. Runs after `move-components`, which is what fills that folder. See [Grouping components](#grouping-components) to change the folders. |
-| `remove-flux-overrides` | Remove published Flux overrides | Deletes the Flux components the starter kit publishes into `resources/views/flux/`, so each one renders as Flux ships it rather than as the kit restyled it. Out of the box that's `navlist/group`, which gives the sidebar group heading its Flux styling and RTL handling back. The icons in `flux/icon/` are left alone. See [Removing Flux overrides](#removing-flux-overrides) to change the list. |
-
-#### Converting partials
-
-An `@include` shares the variables of the view that includes it; a component does not. So `convert-partials` reads the variables each partial needs from `settings.tasks.convert-partials.props` in the published config — a map of partial name to the props it declares:
-
-```php
-'settings' => [
-    'tasks' => [
-        'convert-partials' => [
-            'props' => [
-                'head' => ['title'],
-            ],
-        ],
-    ],
-],
-```
-
-That's what turns `partials/head.blade.php`, which renders `$title` it inherited from the layout, into a component that declares it:
-
-```blade
-@props(['title' => null])
-
-<title>{{ filled($title ?? null) ? ... }}</title>
-```
-
-and every caller into one that passes it:
-
-```blade
-<x-head :title="$title ?? null" />
-```
-
-A few things worth knowing:
-
-- A partial missing from `props` converts to a bare tag — right for one that reads nothing (`settings-heading`), silently wrong for one that reads something, so list your own partials here.
-- Only a plain, dataless `@include` is converted. A partial referenced any other way — `@include('partials.head', ['title' => 'Dashboard'])`, `@includeWhen`, a `view('partials.head')` call — is left **entirely** alone, file and references both, and reported at the end of the run: those forms pass or withhold scope in ways a tag can't be assumed to reproduce, so they're never guessed at. Convert them by hand, or make the include dataless and re-run.
-- Partials land at the root of `components/`, so opting into `group-components` as well sorts them like any other component: `head` into `layout/` and `settings-heading` into `settings/` by default, rendering as `<x-layout.head />` and `<x-settings.settings-heading />`. A partial of your own needs a folder there too, or it stays at the root and is reported as ungrouped.
-- Subpaths are preserved: `partials/nested/meta.blade.php` becomes `components/nested/meta.blade.php` and renders as `<x-nested.meta>`.
-- The `partials/` folder is removed once it's empty, and kept if an unconvertible partial is still in it.
-- Re-running is a no-op, and an existing target is never clobbered.
-
-#### Grouping components
-
-`group-components` reads its folders from `settings.tasks.group-components.groups` in the published config — a map of folder name to the components it holds:
-
-```php
-'settings' => [
-    'tasks' => [
-        'group-components' => [
-            'groups' => [
-                'branding' => ['app-logo', 'app-logo-icon'],
-                'auth' => ['auth-header', 'auth-session-status', 'passkey-registration', 'passkey-verify'],
-                'layout' => ['head'],
-                'navigation' => ['desktop-user-menu'],
-                'settings' => ['settings-heading'],
-                'teams' => ['create-team-modal', 'team-invitation-alert', 'team-switcher'],
-                'ui' => ['placeholder-pattern'],
-            ],
-        ],
-    ],
-],
-```
-
-The folder name **is** the dotted prefix the component picks up, so renaming `branding` to `brand` here is all it takes to have the components render as `<x-brand.app-logo>` — the rewrite follows.
-
-A few things worth knowing:
-
-- Only the root of `components/` is sorted. A component already in a subfolder — like the `settings/layout` that `move-components` puts there — is already grouped and is left alone.
-- A root component that isn't listed under any folder **stays where it is** and is reported at the end of the run, so your own components are never guessed at. Add them to a folder above to have them sorted.
-- Listing a component your kit doesn't ship is harmless: it simply never matches. The defaults cover all three starter-kit variants, `teams` included.
-- `head` and `settings-heading` only reach the root of `components/` when [`convert-partials`](#converting-partials) runs. They're listed for the run that opts into both tasks, and never match otherwise.
-- References are matched on the `<x-` / `</x-` tag prefix, which keeps the rewrite off Alpine's `x-` attributes and off any Flux component sharing a name. A component referenced dynamically (`<x-dynamic-component :component="$name" />`, `view('components.app-logo')`) can't be matched and will need a hand-edit.
-- Re-running is a no-op, and an existing target is never clobbered.
-
-#### Removing Flux overrides
-
-The starter kit publishes a handful of Flux's own components into `resources/views/flux/` and restyles them — the published `navlist/group` gives the sidebar group heading a smaller, lighter heading than Flux's and drops the `rtl:rotate-180` on its chevron. A published blade wins over the package's, so those edits are what you see until the file is gone. `remove-flux-overrides` reads which ones to delete from `settings.tasks.remove-flux-overrides.views` in the published config, named the way Flux addresses them:
-
-```php
-'settings' => [
-    'tasks' => [
-        'remove-flux-overrides' => [
-            'views' => [
-                'navlist/group',
-            ],
-        ],
-    ],
-],
-```
-
-A few things worth knowing:
-
-- `navlist/group` is `resources/views/flux/navlist/group.blade.php`. Add any other override your kit publishes; listing one it doesn't is harmless, as a view that isn't on disk is skipped.
-- Only what's listed is removed. The icons the [`lucide` kit](#built-in-kits) publishes into `flux/icon/` live in the same folder and are never touched.
-- A folder left empty by the last view removed from it goes too, but `flux/` itself stays — it's where the next publish lands.
-- Nothing references these blades by name, so there's no rewrite pass: Flux resolves the component from the package again the moment the file is gone.
-- The compiled views are cleared for you at the end of the task, and they have to be. This is the one task that rewrites nothing, so no view's mtime moves and Blade won't recompile the parents on its own — and with [Blaze](https://github.com/livewire/blaze) installed a stale parent has the override *folded into it by path*, so once that path is gone the component renders as **nothing at all** rather than falling back to Flux's. A silently vanishing sidebar group is the symptom.
-- This is a one-way trade of the kit's styling for Flux's — the deleted blade is the only copy of the kit's edits, so reach for git if you want it back. `php artisan flux:publish navlist.group` re-publishes Flux's own copy, which is a starting point for your own edits, not the kit's.
-- Re-running is a no-op.
-
-### Icon reference page
-
-In the `local` environment Tailor registers a Livewire page listing the icons it manages, handy for eyeballing the Heroicon → Lucide mapping:
-
-```
-/tailor/icons
-```
-
-This route is **never** registered outside `local`.
-
-## Extending Tailor
-
-Tailor is config-driven. `config/tailor.php` is the single source of truth for which kits, tasks, and icon mappings are available. Publish it first so you have a local copy to edit:
-
-```bash
-php artisan vendor:publish --tag="tailor-config"
-```
-
-### Add a kit or task
-
-Generate a class with the provided make commands:
-
-```bash
-php artisan make:tailor-kit BootstrapKit    # -> app/Tailor/Kits/BootstrapKit.php
-php artisan make:tailor-task RenameBrand    # -> app/Tailor/Tasks/RenameBrand.php
-```
-
-Then register it in `config/tailor.php` under `registry`:
-
-```php
-'registry' => [
-    'kits' => [
-        AsIsKit::class,
-        HeroKit::class,
-        LucideKit::class,
-        \App\Tailor\Kits\BootstrapKit::class,
-    ],
-    // 'tasks' => [ MoveAuth::class, \App\Tailor\Tasks\RenameBrand::class ],
-],
-```
-
-A kit implements `Onelegstudios\Tailor\Kits\UiKit`; a task implements `Onelegstudios\Tailor\Tasks\TailorTask`. Both expose a `key()`, a `label()`, and an `apply()` method that returns an array of items it couldn't apply (an empty array means success).
-
-If your kit or task needs options of its own, put them under `settings.kits.{key}` or `settings.tasks.{key}` and read them with `config("tailor.settings.tasks.{$this->key()}.your-option")` — keying on `key()` means the config location is derivable from the class rather than memorized. The built-in `lucide` and `group-components` are the worked examples.
-
-### Override a built-in
-
-Drop a class with the same short name into the override namespace and it runs instead of the package's version — no change to the config lists:
-
-```php
-'registry' => [
-    'overrides' => [
-        'kits'  => 'App\\Tailor\\Kits',   // App\Tailor\Kits\LucideKit overrides the package's LucideKit
-        'tasks' => 'App\\Tailor\\Tasks',
-    ],
-],
-```
-
-## Testing
-
-```bash
-composer test          # Pint (lint check) + PHPStan + Pest
-composer test-coverage # Pest with coverage
-```
-
-The individual steps can also be run on their own:
-
-```bash
-composer lint          # Fix code style with Pint (composer format is an alias)
-composer lint:check    # Check code style without changing files
-composer analyse       # Static analysis with PHPStan (composer types:check runs it with a raised memory limit)
-```
-
-### Maintenance scripts (`bin/`)
-
-Two dev-only helpers live in `bin/`. They are not part of the published package — they keep the test fixtures and icon config in sync during development, and should be run from the package root.
-
-| Script                  | What it does                                                                                                                                                                                                                                                                                                                                 |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bin/download-fixtures` | Rebuilds `tests/Fixtures/starter-kits` from scratch by downloading the Livewire starter-kit variants (`main`, `components`, `teams`) used as test fixtures. Each variant's own top-level `tests/` dir is skipped, and the fixtures are only swapped into place once every download succeeds. Review with `git status` and commit afterwards. |
-| `bin/scan-icons`        | Scans the starter-kit fixtures and Flux's components for the icon names the app uses and records them in `config/tailor.php` (under `settings.kits.lucide.icons`, keeping `settings.kits.hero.icons` keys in sync). Append-only by default.                                                                                                  |
-
-`bin/scan-icons` accepts a few flags:
-
-```bash
-bin/scan-icons            # add newly found icons; warn about stale ones
-bin/scan-icons --prune    # also remove config entries for icons no longer found
-bin/scan-icons --check    # report missing icons and exit 1 without writing (for CI)
-bin/scan-icons --help     # show full usage
-```
+| Guide                                | What's in it                                                          |
+| ------------------------------------ | --------------------------------------------------------------------- |
+| [Installation](docs/installation.md) | Requirements, installing, publishing the config, and removing Tailor.  |
+| [Usage](docs/usage.md)               | Running the command, its options, and the icon reference page.         |
+| [Kits](docs/kits.md)                 | The built-in icon sets and what each one does to your views.           |
+| [Tasks](docs/tasks.md)               | The optional tweaks, what they rewrite, and how to configure them.     |
+| [Extending Tailor](docs/extending.md) | Adding your own kits and tasks, and overriding the built-in ones.     |
+| [Development](docs/development.md)   | Running the test suite and the package's maintenance scripts.          |
 
 ## Changelog
 
