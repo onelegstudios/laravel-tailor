@@ -1,9 +1,35 @@
 <?php
 
+use Illuminate\Console\Command;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Filesystem\Filesystem;
 use Onelegstudios\Tailor\Actions\RemoveTailorPackage;
+use Onelegstudios\Tailor\Commands\TailorCommand;
+use Onelegstudios\Tailor\Kits\AsIsKit;
 use Onelegstudios\Tailor\Tests\Stubs\RecordingFluxIconCommand;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
+
+/**
+ * Run the tailor command supplying no answers, and hand back its exit status.
+ *
+ * A non-interactive run takes every prompt at its default: Prompts falls back to
+ * Symfony's question helper while testing, and that helper returns the question's
+ * default outright rather than reading any input. That is the only way a default
+ * gets exercised here — expectsQuestion() stubs the question out and hands back
+ * the answer the test picked, so the default is never consulted and a test built
+ * on it keeps passing whatever the default is changed to.
+ */
+function runTailorTakingEveryDefault(): int
+{
+    $input = new ArrayInput([]);
+    $input->setInteractive(false);
+
+    $command = app(TailorCommand::class);
+    $command->setLaravel(app());
+
+    return $command->run($input, new BufferedOutput);
+}
 
 beforeEach(function () {
     // Isolate resource_path() from other parallel workers before capturing it.
@@ -99,11 +125,18 @@ it('announces each task as it runs so a slow task does not look like a hang', fu
 });
 
 it('defaults the UI kit to leaving the starter kit as-is', function () {
-    $this->artisan('tailor')
-        ->expectsQuestion('Which icon set do you want?', 'as-is')
-        ->expectsQuestion('What else would you like to tailor?', [])
-        ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'no')
-        ->assertSuccessful();
+    // Leaves the kit prompt as the only one with a default worth pinning here. The
+    // task prompt's fallback offers no "None" while testing, so its default is not
+    // a thing this run can take.
+    config()->set('tailor.registry.tasks', []);
+
+    $asIs = Mockery::mock(AsIsKit::class)->makePartial();
+    $asIs->shouldReceive('apply')->once()->andReturn([]);
+    $this->app->instance(AsIsKit::class, $asIs);
+
+    // Taking the kit prompt at its default has to be what runs the as-is kit, so a
+    // default of anything else leaves this expectation unmet.
+    expect(runTailorTakingEveryDefault())->toBe(Command::SUCCESS);
 });
 
 it('downloads the starter-kit Lucide icons when the Lucide kit is selected', function () {
