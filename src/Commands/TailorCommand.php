@@ -4,7 +4,6 @@ namespace Onelegstudios\Tailor\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
-use Laravel\Prompts\Prompt;
 use Onelegstudios\Tailor\Actions\RemoveTailorPackage;
 use Onelegstudios\Tailor\Kits\UiKit;
 use Onelegstudios\Tailor\Registry;
@@ -100,7 +99,7 @@ class TailorCommand extends Command
 
         $this->clearCompiledViews();
 
-        $this->takeBackPromptOutput();
+        $this->takeBackPrompts();
 
         if ($failed !== []) {
             outro('Tailoring finished, but '.count($failed).' icon(s) could not be downloaded.');
@@ -138,7 +137,7 @@ class TailorCommand extends Command
      * clearing once at the end costs a one-time scaffolding command nothing.
      *
      * Kept quiet: the run has already said what it did, and where the Artisan::call()
-     * leaves Prompts pointed is takeBackPromptOutput()'s to put right, immediately
+     * leaves Prompts pointed is takeBackPrompts()'s to put right, immediately
      * below. Going through the facade rather than callSilent() is what keeps this off
      * the command's Symfony application, which a command constructed directly — as
      * the tests do — hasn't got.
@@ -149,23 +148,32 @@ class TailorCommand extends Command
     }
 
     /**
-     * Point Laravel Prompts back at this command's output, now the kits and tasks
-     * have had their turn and everything left to do is a prompt.
+     * Point Laravel Prompts back at this command, now the kits and tasks have had
+     * their turn and everything left to do is a prompt.
      *
-     * Running a command through Artisan::call() re-points Prompts at the output
-     * that call was given — a NullOutput, when the caller wanted the command kept
-     * quiet — and never puts it back. Left alone, the confirmation and the outro
-     * below would render into nothing while still reading keystrokes, so the
-     * command would look hung.
+     * Running a command through Artisan::call() hands Prompts wholesale to the
+     * command that call ran, and never puts it back: it re-points the output at
+     * the one that call was given — a NullOutput, when the caller wanted the
+     * command kept quiet — and re-registers every fallback closure bound to that
+     * command, over this one's. Left alone, the confirmation below would render
+     * into nothing while reading from an input that was never this command's, so
+     * the command would look hung.
      *
-     * Taking the output back here rather than asking every kit and task to clean up
-     * after itself is what keeps that a non-issue: this is the one place that
-     * prompts, so it is the one place that has to be sure where prompts render, and
-     * a task is free to shell out to whatever it likes.
+     * Both halves have to go back, which is why this re-runs the configuration
+     * rather than setting the output: the fallbacks are what a prompt goes
+     * through whenever Prompts is not driving the terminal itself — on Windows,
+     * and under a test — and they read the input they were bound to. Artisan::call()
+     * builds an interactive one, so a fallback left bound to it reads keystrokes
+     * from the real STDIN and blocks until it gets some.
+     *
+     * Doing it here rather than asking every kit and task to clean up after itself
+     * is what keeps that a non-issue: this is the one place that prompts, so it is
+     * the one place that has to be sure where a prompt renders and what it reads,
+     * and a task is free to shell out to whatever it likes.
      */
-    private function takeBackPromptOutput(): void
+    private function takeBackPrompts(): void
     {
-        Prompt::setOutput($this->output);
+        $this->configurePrompts($this->input);
     }
 
     /**
