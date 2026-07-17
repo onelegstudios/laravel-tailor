@@ -38,6 +38,15 @@ class TestCase extends Orchestra
 
         $this->app->setBasePath($base);
 
+        // view.compiled is an absolute path resolved before the base path moved, so
+        // it still points into the shared skeleton — and view:clear empties whatever
+        // it points at. Re-point it into the isolated base too, or a run that clears
+        // its compiled views takes every other worker's with it, and they fail
+        // rendering a view whose compiled copy vanished mid-test.
+        $files->ensureDirectoryExists($base.'/storage/framework/views');
+
+        config()->set('view.compiled', $base.'/storage/framework/views');
+
         return $base;
     }
 

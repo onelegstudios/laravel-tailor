@@ -36,18 +36,15 @@ function runTailorTakingEveryDefault(array $parameters = [], ?OutputStyle $outpu
 
 /**
  * Drop a file into the compiled view path, standing in for a view compiled before
- * the run, and point the app at that path. Returns the file's path.
+ * the run. Returns the file's path.
  *
- * Compiled views live under the Testbench skeleton every worker shares, and
- * view:clear empties whatever directory it is pointed at — so this re-points
- * view.compiled into the isolated base first, rather than have one worker's run
- * clear another's.
+ * view.compiled already points into the isolated base — isolateApplicationPaths()
+ * re-points it there, since view:clear empties whatever directory it is pointed at
+ * and the skeleton's is shared by every worker.
  */
-function staleCompiledView(string $base): string
+function staleCompiledView(): string
 {
-    $compiled = $base.'/storage/framework/views';
-
-    config()->set('view.compiled', $compiled);
+    $compiled = config('view.compiled');
 
     (new Filesystem)->ensureDirectoryExists($compiled);
 
@@ -169,7 +166,7 @@ it('announces each task as it runs so a slow task does not look like a hang', fu
 // the lucide kit aliases icons only Flux's own blades in vendor/ reference. Clearing
 // once here is what covers both, and the two tests below are the whole of it.
 it('clears the compiled views once the run is over', function () {
-    $stale = staleCompiledView($this->appBase);
+    $stale = staleCompiledView();
 
     $this->artisan('tailor', ['--ui-kit' => 'as-is'])
         ->expectsQuestion('What else would you like to tailor?', ['remove-flux-overrides'])
@@ -183,7 +180,7 @@ it('clears the compiled views once the run is over', function () {
 // command can work out the moment a kit or task it does not own — the registry takes
 // both from config — is free to touch views/ however it likes.
 it('clears the compiled views even when the run tailored nothing', function () {
-    $stale = staleCompiledView($this->appBase);
+    $stale = staleCompiledView();
 
     $this->artisan('tailor', ['--ui-kit' => 'as-is'])
         ->expectsQuestion('What else would you like to tailor?', [])
