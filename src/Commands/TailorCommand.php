@@ -3,6 +3,7 @@
 namespace Onelegstudios\Tailor\Commands;
 
 use Illuminate\Console\Command;
+use Laravel\Prompts\Prompt;
 use Onelegstudios\Tailor\Actions\RemoveTailorPackage;
 use Onelegstudios\Tailor\Kits\UiKit;
 use Onelegstudios\Tailor\Registry;
@@ -95,6 +96,8 @@ class TailorCommand extends Command
             $this->output->writeln('<info>✓ '.$task->label().'</info>');
         }
 
+        $this->takeBackPromptOutput();
+
         if ($failed !== []) {
             outro('Tailoring finished, but '.count($failed).' icon(s) could not be downloaded.');
 
@@ -106,6 +109,26 @@ class TailorCommand extends Command
         outro('All done! Your starter kit has been tailored.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Point Laravel Prompts back at this command's output, now the kits and tasks
+     * have had their turn and everything left to do is a prompt.
+     *
+     * Running a command through Artisan::call() re-points Prompts at the output
+     * that call was given — a NullOutput, when the caller wanted the command kept
+     * quiet — and never puts it back. Left alone, the confirmation and the outro
+     * below would render into nothing while still reading keystrokes, so the
+     * command would look hung.
+     *
+     * Taking the output back here rather than asking every kit and task to clean up
+     * after itself is what keeps that a non-issue: this is the one place that
+     * prompts, so it is the one place that has to be sure where prompts render, and
+     * a task is free to shell out to whatever it likes.
+     */
+    private function takeBackPromptOutput(): void
+    {
+        Prompt::setOutput($this->output);
     }
 
     /**

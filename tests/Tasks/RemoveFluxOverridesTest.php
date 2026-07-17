@@ -1,11 +1,8 @@
 <?php
 
-use Illuminate\Console\OutputStyle;
 use Illuminate\Filesystem\Filesystem;
 use Onelegstudios\Tailor\Actions\RemoveFluxViews;
 use Onelegstudios\Tailor\Tasks\RemoveFluxOverrides;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\BufferedOutput;
 
 /**
  * Bind a RemoveFluxViews reporting $removed as the views it deleted.
@@ -92,14 +89,5 @@ it('leaves the compiled views alone when it removed nothing', function () {
     unlink($stale);
 });
 
-it('leaves Laravel Prompts rendering to the command output after clearing', function () {
-    fakeFluxRemoval(['navlist/group']);
-
-    $output = new OutputStyle(new ArrayInput([]), new BufferedOutput);
-
-    app(RemoveFluxOverrides::class)->apply($output);
-
-    // Artisan::call() re-points Prompts at the NullOutput it is handed, which would
-    // leave the run's remaining prompts — "remove the Tailor package now?" — invisible.
-    expect(promptOutput())->toBe($output);
-});
+// Where the Artisan::call() in this task re-points Laravel Prompts is TailorCommand's
+// to put right, and it is asserted there — see "hands Prompts back to its own output".
