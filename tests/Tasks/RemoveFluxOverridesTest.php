@@ -1,8 +1,11 @@
 <?php
 
+use Illuminate\Console\OutputStyle;
 use Illuminate\Filesystem\Filesystem;
 use Onelegstudios\Tailor\Actions\RemoveFluxViews;
 use Onelegstudios\Tailor\Tasks\RemoveFluxOverrides;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 
 /**
  * Bind a RemoveFluxViews reporting $removed as the views it deleted.
@@ -87,6 +90,18 @@ it('leaves the compiled views alone when it removed nothing', function () {
     expect(file_exists($stale))->toBeTrue();
 
     unlink($stale);
+});
+
+// Narrating the run belongs to TailorCommand, which announces every task by its
+// label and knows whether one is worth mentioning. A task that reports itself as
+// well says the same thing twice, and this is the only one that ever did.
+it('leaves the narrating to the command', function () {
+    fakeFluxRemoval(['navlist/group']);
+    $buffer = new BufferedOutput;
+
+    app(RemoveFluxOverrides::class)->apply(new OutputStyle(new ArrayInput([]), $buffer));
+
+    expect($buffer->fetch())->toBe('');
 });
 
 // Where the Artisan::call() in this task re-points Laravel Prompts is TailorCommand's

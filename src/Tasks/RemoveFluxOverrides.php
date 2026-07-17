@@ -39,7 +39,7 @@ class RemoveFluxOverrides implements TailorTask
         $removed = $this->removeFluxViews->execute(resource_path('views/flux'), $views);
 
         if ($removed !== []) {
-            $this->clearCompiledViews($output);
+            $this->clearCompiledViews();
         }
 
         return [];
@@ -58,13 +58,11 @@ class RemoveFluxOverrides implements TailorTask
      * component silently vanishes from the page rather than falling back to
      * Flux's.
      */
-    private function clearCompiledViews(?OutputStyle $output = null): void
+    private function clearCompiledViews(): void
     {
         // Kept quiet: the command announces this task itself, and TailorCommand
         // takes the prompt output back once every task has run, so the re-pointing
         // Artisan::call() does here needs no undoing.
         Artisan::call('view:clear', [], new NullOutput);
-
-        $output?->writeln('<info>✓ Cleared the compiled views</info>');
     }
 }
