@@ -4,7 +4,6 @@ namespace Onelegstudios\Tailor\Tasks;
 
 use Illuminate\Console\OutputStyle;
 use Illuminate\Support\Facades\Artisan;
-use Laravel\Prompts\Prompt;
 use Onelegstudios\Tailor\Actions\RemoveFluxViews;
 use Symfony\Component\Console\Output\NullOutput;
 
@@ -61,16 +60,10 @@ class RemoveFluxOverrides implements TailorTask
      */
     private function clearCompiledViews(?OutputStyle $output = null): void
     {
+        // Kept quiet: the command announces this task itself, and TailorCommand
+        // takes the prompt output back once every task has run, so the re-pointing
+        // Artisan::call() does here needs no undoing.
         Artisan::call('view:clear', [], new NullOutput);
-
-        // Running a command through Artisan::call() re-points Laravel Prompts at
-        // the output that call was given — the NullOutput above — and never puts
-        // it back. Left alone, the run's remaining prompts would render into
-        // nothing while still reading keystrokes, so the command would look hung.
-        // Point Prompts back at our own output now the clear is done.
-        if ($output instanceof OutputStyle) {
-            Prompt::setOutput($output);
-        }
 
         $output?->writeln('<info>✓ Cleared the compiled views</info>');
     }

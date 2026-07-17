@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Console\Command;
+use Illuminate\Console\OutputStyle;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Filesystem\Filesystem;
 use Onelegstudios\Tailor\Actions\RemoveTailorPackage;
@@ -20,15 +21,30 @@ use Symfony\Component\Console\Output\BufferedOutput;
  * the answer the test picked, so the default is never consulted and a test built
  * on it keeps passing whatever the default is changed to.
  */
-function runTailorTakingEveryDefault(): int
+function runTailorTakingEveryDefault(array $parameters = [], ?OutputStyle $output = null): int
 {
-    $input = new ArrayInput([]);
+    $input = new ArrayInput($parameters);
     $input->setInteractive(false);
 
     $command = app(TailorCommand::class);
     $command->setLaravel(app());
 
-    return $command->run($input, new BufferedOutput);
+    // An OutputStyle passed to run() is used as-is, which is what lets a caller keep
+    // hold of the output the command prompts to.
+    return $command->run($input, $output ?? new BufferedOutput);
+}
+
+/**
+ * An OutputStyle a prompt can be answered through without any input: it is the
+ * OutputStyle's own input that the question helper reads, and an interactive one
+ * with nothing to read aborts the run rather than taking the default.
+ */
+function nonInteractiveOutput(): OutputStyle
+{
+    $input = new ArrayInput([]);
+    $input->setInteractive(false);
+
+    return new OutputStyle($input, new BufferedOutput);
 }
 
 beforeEach(function () {
@@ -196,6 +212,31 @@ it('removes the package when the user confirms after tailoring', function () {
         ->expectsQuestion('What else would you like to tailor?', [])
         ->expectsConfirmation('Tailoring is done — remove the Tailor package now?', 'yes')
         ->assertSuccessful();
+});
+
+// A kit or task that runs another command through Artisan::call() leaves Laravel
+// Prompts pointed at the output that call was given, and the command takes it back
+// before it prompts again. The lucide kit is the shortest way in — its downloads go
+// through Artisan::call() — but the same single restore covers the tasks, which is
+// where this last went wrong.
+//
+// Nothing in a prompts-mocked test can catch this: expectsConfirmation() stubs the
+// question out instead of rendering it, so the confirmation is asked either way and
+// only *where* it renders is wrong. Hence the real run and the real OutputStyle.
+it('hands Prompts back to its own output after a kit has shelled out to Artisan', function () {
+    // No tasks, so the run reaches the confirmation without stopping at a multiselect
+    // it has no answer for: that prompt's fallback has no default to take while
+    // testing, and hands back null rather than an empty selection.
+    config()->set('tailor.registry.tasks', []);
+    config()->set('tailor.settings.kits.lucide.icons', [
+        'starter-kit' => ['heroicons' => ['home' => 'house'], 'lucide' => []],
+        'flux' => ['normal' => [], 'animated' => []],
+    ]);
+
+    $output = nonInteractiveOutput();
+
+    expect(runTailorTakingEveryDefault(['--ui-kit' => 'lucide'], $output))->toBe(Command::SUCCESS)
+        ->and(promptOutput())->toBe($output);
 });
 
 it('fails when given an unknown --ui-kit', function () {
