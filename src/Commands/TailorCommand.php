@@ -3,11 +3,13 @@
 namespace Onelegstudios\Tailor\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
 use Laravel\Prompts\Prompt;
 use Onelegstudios\Tailor\Actions\RemoveTailorPackage;
 use Onelegstudios\Tailor\Kits\UiKit;
 use Onelegstudios\Tailor\Registry;
 use Onelegstudios\Tailor\Tasks\TailorTask;
+use Symfony\Component\Console\Output\NullOutput;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\intro;
@@ -96,6 +98,8 @@ class TailorCommand extends Command
             $this->output->writeln('<info>✓ '.$task->label().'</info>');
         }
 
+        $this->clearCompiledViews();
+
         $this->takeBackPromptOutput();
 
         if ($failed !== []) {
@@ -109,6 +113,39 @@ class TailorCommand extends Command
         outro('All done! Your starter kit has been tailored.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Discard the compiled views once the run is over, or what a kit or task just
+     * did to views/ doesn't take effect until every view that renders one of them
+     * is edited.
+     *
+     * Blade only recompiles a view when its own file is newer than its compiled
+     * copy, so a step is only safe on its own if it moves the mtime of every file
+     * that resolves the view it touched. Most steps do, incidentally: they rewrite
+     * their callers, so the callers recompile. The ones that don't are the steps
+     * whose callers they never rewrite — remove-flux-overrides deletes a view and
+     * leaves the <flux:navlist.group> tags exactly as they are, and the lucide kit
+     * aliases icons that only Flux's own blades in vendor/ reference. With Blaze
+     * installed a stale copy is worse than merely outdated, as it has the resolved
+     * component folded into it by path: the removed override renders as nothing at
+     * all rather than falling back to Flux's, and the published alias never renders
+     * at all.
+     *
+     * Doing it here rather than asking each step to work out whether it needs to is
+     * what keeps that a non-issue. The registry takes kits and tasks from config, so
+     * a step this package never sees is free to touch views/ however it likes, and
+     * clearing once at the end costs a one-time scaffolding command nothing.
+     *
+     * Kept quiet: the run has already said what it did, and where the Artisan::call()
+     * leaves Prompts pointed is takeBackPromptOutput()'s to put right, immediately
+     * below. Going through the facade rather than callSilent() is what keeps this off
+     * the command's Symfony application, which a command constructed directly — as
+     * the tests do — hasn't got.
+     */
+    private function clearCompiledViews(): void
+    {
+        Artisan::call('view:clear', [], new NullOutput);
     }
 
     /**
