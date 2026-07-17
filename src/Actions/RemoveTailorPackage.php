@@ -10,7 +10,7 @@ class RemoveTailorPackage
     /**
      * The Composer package name for Tailor.
      */
-    public const PACKAGE = 'oneleggedswede/laravel-tailor';
+    public const PACKAGE = 'onelegstudios/laravel-tailor';
 
     public function __construct(
         private readonly Composer $composer,
