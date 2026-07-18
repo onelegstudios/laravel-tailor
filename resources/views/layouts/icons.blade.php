@@ -92,6 +92,35 @@
 
         .tailor-search input:focus { border-color: var(--accent); }
 
+        /* A prominent, kit-level divider so it's obvious which kit the sections
+           beneath it belong to (Hero reverts to Heroicons, Lucide swaps to Lucide). */
+        .tailor-kit {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: .6rem;
+            margin: 2.75rem 0 1.1rem;
+            padding-bottom: .55rem;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .tailor-kit:first-of-type { margin-top: .5rem; }
+
+        .tailor-kit-badge {
+            flex: none;
+            background: var(--accent);
+            color: #ffffff;
+            border-radius: .35rem;
+            padding: .1rem .45rem;
+            font-size: .65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .tailor-kit-name { font-size: 1.05rem; font-weight: 700; }
+        .tailor-kit-desc { color: var(--muted); font-size: .82rem; }
+
         .tailor-section { margin-bottom: 2.25rem; }
 
         .tailor-section h2 {
