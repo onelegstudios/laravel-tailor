@@ -2,6 +2,7 @@
 
 namespace Onelegstudios\Tailor\Kits;
 
+use Composer\InstalledVersions;
 use Illuminate\Console\OutputStyle;
 use Onelegstudios\Tailor\Actions\PublishLucideIcons;
 use Onelegstudios\Tailor\Actions\ReplaceIcons;
@@ -42,7 +43,13 @@ class LucideKit implements UiKit
         $map = array_merge([], ...array_values(array_filter($starterKit, 'is_array')));
 
         $flux = $icons['flux'] ?? [];
-        $normal = $flux['normal'] ?? [];
+
+        // Only Flux Pro's components reference the `pro` group, so a free-only
+        // app skips those glyphs rather than downloading icons it cannot render.
+        $fluxIcons = array_merge(
+            $flux['free'] ?? [],
+            $this->fluxProIsInstalled() ? ($flux['pro'] ?? []) : [],
+        );
         $animated = $flux['animated'] ?? [];
 
         // Gather every icon name up front — the starter-kit replacements plus
@@ -50,7 +57,7 @@ class LucideKit implements UiKit
         // downloaded in a single pass.
         $icons = [
             ...array_values($map),
-            ...$this->publishFluxIcons->replacements($normal, $animated),
+            ...$this->publishFluxIcons->replacements($fluxIcons, $animated),
         ];
 
         $failed = $this->publishLucideIcons->execute($iconPath, $icons, $output);
@@ -68,11 +75,26 @@ class LucideKit implements UiKit
             // Starter-kit glyphs are referenced directly by their Lucide name, so
             // they must survive the Flux aliasing pass even when a Flux icon shares
             // the same replacement.
-            $this->publishFluxIcons->applyAliases($iconPath, $normal, $animated, array_values($map));
+            $this->publishFluxIcons->applyAliases($iconPath, $fluxIcons, $animated, array_values($map));
 
             $output?->writeln('<info>✓ Your starter kit now uses Lucide icons.</info>');
         }
 
         return $failed;
+    }
+
+    /**
+     * Whether Flux Pro is installed. Its components are the only ones referencing
+     * the `pro` icon group, so a free-only app neither downloads nor aliases those
+     * glyphs. Installing Pro later and re-running the command picks them up.
+     *
+     * Reads the Composer runtime API rather than probing for a class or container
+     * binding, so the answer reflects what the app actually requires regardless of
+     * boot order or package discovery. Protected so an app overriding this kit can
+     * change the rule.
+     */
+    protected function fluxProIsInstalled(): bool
+    {
+        return InstalledVersions::isInstalled('livewire/flux-pro');
     }
 }

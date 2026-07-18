@@ -211,7 +211,7 @@ it('downloads the starter-kit Lucide icons when the Lucide kit is selected', fun
             'heroicons' => ['home' => 'house', 'trash' => 'trash-2'],
             'lucide' => ['layout-grid' => 'layout-dashboard', 'folder-git-2' => 'folder-git-2'],
         ],
-        'flux' => ['normal' => [], 'animated' => []],
+        'flux' => ['free' => [], 'pro' => [], 'animated' => []],
     ]);
 
     $this->artisan('tailor')
@@ -228,8 +228,11 @@ it('downloads the starter-kit Lucide icons when the Lucide kit is selected', fun
 it('downloads the Flux internal icons when the Lucide kit is selected', function () {
     config()->set('tailor.settings.kits.lucide.icons', [
         'starter-kit' => ['heroicons' => [], 'lucide' => []],
+        // A free-group icon, so the command's download list doesn't depend on
+        // whether flux-pro is installed where the suite runs.
         'flux' => [
-            'normal' => ['eye-dropper' => 'pipette'],
+            'free' => ['eye-dropper' => 'pipette'],
+            'pro' => [],
             'animated' => ['loading' => 'loader-circle'],
         ],
     ]);
@@ -280,7 +283,7 @@ it('hands Prompts back to its own output after a kit has shelled out to Artisan'
     config()->set('tailor.registry.tasks', []);
     config()->set('tailor.settings.kits.lucide.icons', [
         'starter-kit' => ['heroicons' => ['home' => 'house'], 'lucide' => []],
-        'flux' => ['normal' => [], 'animated' => []],
+        'flux' => ['free' => [], 'pro' => [], 'animated' => []],
     ]);
 
     $output = nonInteractiveOutput();
@@ -302,7 +305,7 @@ it('fails when an icon cannot be downloaded', function () {
             'heroicons' => ['home' => 'house', 'trash' => 'trash-2'],
             'lucide' => [],
         ],
-        'flux' => ['normal' => [], 'animated' => []],
+        'flux' => ['free' => [], 'pro' => [], 'animated' => []],
     ]);
 
     RecordingFluxIconCommand::$fail = ['trash-2'];

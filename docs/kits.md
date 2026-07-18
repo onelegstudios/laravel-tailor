@@ -69,7 +69,9 @@ The bigger of the two swaps, and the reason the icon map in the config is as lar
 1. **Your views.** Every Heroicon the starter kit references is swapped for its Lucide equivalent — `arrow-path` becomes `refresh-cw`, `magnifying-glass` becomes `search`, and so on.
 2. **Flux's own components.** Flux references Heroicons internally, by name, from inside its own blades — the chevron in a select, the spinner on a loading button. Those can't be rewritten, since they live in the package. Instead the kit publishes the Lucide glyph into `resources/views/flux/icon/` **under the Heroicon's name**, so Flux asks for `chevron-up-down` and gets Lucide's `chevrons-up-down`. That's the re-aliasing.
 
-Both halves are driven by `settings.kits.lucide.icons`, grouped by what each set is for — `starter-kit.heroicons` and `starter-kit.lucide` for your views, `flux.normal` and `flux.animated` for the icons Flux reaches for itself. Every value is the Lucide name the kit downloads and renders, so pointing an entry at a glyph you prefer is all it takes to change what you get.
+Both halves are driven by `settings.kits.lucide.icons`, grouped by what each set is for — `starter-kit.heroicons` and `starter-kit.lucide` for your views, and `flux.free`, `flux.pro` and `flux.animated` for the icons Flux reaches for itself. Every value is the Lucide name the kit downloads and renders, so pointing an entry at a glyph you prefer is all it takes to change what you get.
+
+The `flux` group is split by which package ships the component doing the referencing: `flux.free` for icons a free Flux component uses, `flux.pro` for icons only a [Flux Pro](https://fluxui.dev) component reaches for (the date-picker's `calendar`, the color-picker's `eye-dropper`), and `flux.animated` for the built-in `loading` spinner, which both use. If Flux Pro isn't installed, the kit skips `flux.pro` entirely — a free-only app never downloads glyphs it has no component to render. Install Pro later and re-run and they're picked up; an icon both free and Pro reference stays in `flux.free`, so skipping Pro never strands one.
 
 A few things worth knowing:
 
