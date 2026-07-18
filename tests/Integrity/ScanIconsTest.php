@@ -13,12 +13,14 @@ it('groups icons into starter-kit and flux in config/tailor.php', function () us
     // Lucide icon, so they are not required to equal the original name.
     expect($starterKit['lucide'])->each(fn ($replacement) => $replacement->toBeString()->not->toBe(''));
     expect($starterKit['heroicons'])->each(fn ($replacement) => $replacement->toBeString()->not->toBe(''));
-    expect($flux['normal'])->each(fn ($replacement) => $replacement->toBeString()->not->toBe(''));
+    expect($flux['free'])->each(fn ($replacement) => $replacement->toBeString()->not->toBe(''));
+    expect($flux['pro'])->each(fn ($replacement) => $replacement->toBeString()->not->toBe(''));
     expect($flux['animated'])->each(fn ($replacement) => $replacement->toBeString()->not->toBe(''));
 
     $heroicons = array_keys($starterKit['heroicons']);
     $lucide = array_keys($starterKit['lucide']);
-    $normal = array_keys($flux['normal']);
+    $free = array_keys($flux['free']);
+    $pro = array_keys($flux['pro']);
     $animated = array_keys($flux['animated']);
 
     // starter-kit.heroicons: the app's own Heroicons (from the fixtures).
@@ -41,26 +43,41 @@ it('groups icons into starter-kit and flux in config/tailor.php', function () us
         ->toContain('layout-grid')
         ->toContain('chevrons-up-down');
 
-    // flux.normal: icons only Flux's own components use (free + Pro), deduped
-    // against starter-kit.heroicons.
-    expect($normal)
+    // flux.free: icons a free Flux component references, deduped against
+    // starter-kit.heroicons. Downloaded for every app.
+    expect($free)
+        ->toContain('exclamation-triangle')// error, via @props default icon
+        ->toContain('slash')               // breadcrumbs separator
+        ->toContain('chevron-up')          // input number stepper
+        ->not->toContain('calendar')       // Pro-only: date-picker
+        ->not->toContain('chevron-down')   // already an app heroicon
+        ->not->toContain('loading');
+
+    // flux.pro: icons *only* a Flux Pro component references, so LucideKit skips
+    // them without Pro installed. Deduped against free as well as starter-kit.
+    expect($pro)
         ->toContain('calendar')            // date-picker
         ->toContain('clock')               // time-picker
         ->toContain('eye-dropper')         // color-picker
         ->toContain('document')            // file-item, via @props default icon
         ->toContain('cloud-arrow-up')      // file-upload dropzone @props default
-        ->toContain('exclamation-triangle')// error, via @props default icon
-        ->not->toContain('chevron-down')   // already an app heroicon
+        ->toContain('chevron-up-down')     // Pro's select
+        ->not->toContain('exclamation-triangle') // free already carries it
         ->not->toContain('loading');
 
-    // flux.animated: Flux's built-in animated pseudo-icons.
+    // flux.animated: Flux's built-in animated pseudo-icons. Both packages
+    // reference the spinner, so it stays out of the free/pro split.
     expect($animated)
         ->toContain('loading')
         ->not->toContain('chevron-down');
 
+    // An icon both packages reference belongs to free, so a free-only app still
+    // gets it when the pro group is skipped.
+    expect(array_intersect($free, $pro))->toBe([]);
+
     // No icon is duplicated between the starter-kit and flux groups.
     $starterKitNames = array_merge($heroicons, $lucide);
-    expect(array_intersect($starterKitNames, array_merge($normal, $animated)))->toBe([]);
+    expect(array_intersect($starterKitNames, array_merge($free, $pro, $animated)))->toBe([]);
 });
 
 it('mirrors the starter-kit lucide overrides in the hero kit', function () use ($root) {

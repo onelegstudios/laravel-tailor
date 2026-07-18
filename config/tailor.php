@@ -69,6 +69,13 @@ return [
             // LucideKit (key: 'lucide') — swaps the starter kit's Heroicons for
             // their Lucide equivalents and re-aliases the icons Flux references
             // internally. bin/scan-icons regenerates the `icons` map wholesale.
+            //
+            // The `flux` group is split by the package that ships the component
+            // doing the referencing: `free` for livewire/flux, `pro` for icons only
+            // livewire/flux-pro's components use (an icon both reference counts as
+            // free). LucideKit downloads `pro` only when flux-pro is installed, so
+            // a free-only app doesn't fetch glyphs it has no component to render.
+            // `animated` is referenced by both and always downloaded.
             'lucide' => [
                 'icons' => [
                     'starter-kit' => [
@@ -109,20 +116,22 @@ return [
                         ],
                     ],
                     'flux' => [
-                        'normal' => [
-                            'calendar' => 'calendar',
+                        'free' => [
                             'chevron-left' => 'chevron-left',
                             'chevron-up' => 'chevron-up',
-                            'chevron-up-down' => 'chevrons-up-down',
                             'clipboard-document' => 'clipboard',
                             'clipboard-document-check' => 'clipboard-check',
+                            'exclamation-triangle' => 'triangle-alert',
+                            'minus' => 'minus',
+                            'slash' => 'slash',
+                        ],
+                        'pro' => [
+                            'calendar' => 'calendar',
+                            'chevron-up-down' => 'chevrons-up-down',
                             'clock' => 'clock',
                             'cloud-arrow-up' => 'cloud-upload',
                             'document' => 'file',
-                            'exclamation-triangle' => 'triangle-alert',
                             'eye-dropper' => 'pipette',
-                            'minus' => 'minus',
-                            'slash' => 'slash',
                         ],
                         'animated' => [
                             'loading' => 'loader-circle',

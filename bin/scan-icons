@@ -7,23 +7,30 @@
  * (settings.kits.lucide.icons), split into sub-arrays by source.
  *
  * Tailor needs to know every icon that must be re-mapped when the user switches
- * UI kit. That icons key has two groups, each with two sub-groups:
+ * UI kit. That icons key has two groups:
  *
  *   starter-kit          — icons the app's own views use (scanned from
  *                          tests/Fixtures):
  *       heroicons        — Flux's default Heroicons.
  *       lucide           — names the starter kit ships as local overrides (blade
  *                          files under resources/views/flux/icon/, from lucide.dev).
- *   flux                 — icons Flux's own bundled components render internally
- *                          (scanned from vendor/livewire/flux + flux-pro):
- *       normal           — regular icons (e.g. the date-picker's `calendar`),
- *                          excluding any already in starter-kit (heroicons or
- *                          lucide) so no icon is duplicated across the two groups.
+ *   flux                 — icons Flux's own bundled components render internally,
+ *                          split by which package ships the component that
+ *                          references them. Each sub-group excludes anything
+ *                          already in starter-kit (heroicons or lucide), so no icon
+ *                          is duplicated across the two groups:
+ *       free             — referenced by a component in vendor/livewire/flux (e.g.
+ *                          error's `exclamation-triangle`). Always downloaded.
+ *       pro              — referenced *only* by a component in
+ *                          vendor/livewire/flux-pro (e.g. the date-picker's
+ *                          `calendar`), and so excluding anything already in free.
+ *                          LucideKit skips this group when flux-pro isn't
+ *                          installed — see the note on Flux Pro below.
  *       animated         — Flux's built-in animated pseudo-icons (e.g. the
  *                          `loading` spinner); see ANIMATED_ICONS.
  *
- * Values: heroicons and flux.normal start empty (their Lucide equivalent is
- * filled in later). lucide and animated map to themselves (correct in any kit).
+ * Values: heroicons, flux.free and flux.pro start empty (their Lucide equivalent
+ * is filled in later). lucide and animated map to themselves (correct in any kit).
  *
  * HeroKit (settings.kits.hero.icons) is kept in sync too: its key set mirrors the
  * starter-kit.lucide overrides above, but each key maps to a Heroicon rather than
@@ -46,11 +53,18 @@
  * Re-skinning them would require overriding the whole component blade — out of
  * scope for this name-based scanner.
  *
- * Note on Flux Pro: Pro adds components, not an icon set, so its component blades
- * are scanned alongside the free package's. Both are pulled in as dev
- * dependencies (see composer.json require-dev); the Pro repository requires
- * license auth, which is read from a local/global composer auth.json — never
- * committed. If a Flux package is missing from vendor, its source is skipped.
+ * Note on Flux Pro: Pro adds components, not an icon set — but those components
+ * reference icons the free package's never do, and an app without Pro has no way
+ * to render them. So the two packages are scanned separately and recorded as
+ * flux.free and flux.pro, letting LucideKit skip the Pro group when flux-pro
+ * isn't installed rather than downloading six glyphs the app can't use.
+ *
+ * Both are pulled in as dev dependencies (see composer.json require-dev); the Pro
+ * repository requires license auth, read from a local/global composer auth.json —
+ * never committed. A Flux package missing from vendor is skipped, and its group is
+ * then left untouched rather than warned about or pruned: without the source there
+ * is no way to tell "removed upstream" from "not installed here", and pruning on
+ * that guess would silently drop working mappings from the shipped config.
  *
  * Existing entries (and any values already filled in) keep their order. By
  * default the script is append-only: newly discovered names are added, and names
@@ -65,7 +79,8 @@
  */
 
 // Flux's built-in animated pseudo-icons: not Heroicons, and they stay put across
-// kits. Flux Pro adds no icons, so this list is complete; extend it if needed.
+// kits. `loading` is the only one, and both Flux packages reference it — so this
+// group needs no free/pro split and is always downloaded. Extend if Flux adds one.
 const ANIMATED_ICONS = ['loading'];
 
 $root = dirname(__DIR__);
@@ -203,23 +218,27 @@ function scanIcons(array $files): array
 // Source 1: the app's own views.
 $fixtureFiles = collectFiles($fixturesDir);
 
-// Source 2: Flux's bundled component blades (free + Pro), skipped if uninstalled.
-$fluxRoots = array_filter([
-    $root.'/vendor/livewire/flux/stubs/resources/views/flux',
-    $root.'/vendor/livewire/flux-pro/stubs/resources/views/flux',
-], 'is_dir');
-$fluxFiles = [];
-foreach ($fluxRoots as $dir) {
-    $fluxFiles = array_merge($fluxFiles, collectFiles($dir));
+// Source 2: Flux's bundled component blades. The two packages are scanned
+// separately so each icon can be attributed to the package whose component
+// references it; either is skipped if uninstalled.
+$fluxRoot = $root.'/vendor/livewire/flux/stubs/resources/views/flux';
+$fluxProRoot = $root.'/vendor/livewire/flux-pro/stubs/resources/views/flux';
+
+$freeFiles = is_dir($fluxRoot) ? collectFiles($fluxRoot) : [];
+$proFiles = is_dir($fluxProRoot) ? collectFiles($fluxProRoot) : [];
+
+// Whether each package's blades were actually available to scan. When they
+// weren't, that group can't tell "removed upstream" from "package not installed",
+// so it is never warned about or pruned.
+$freeScanned = $freeFiles !== [];
+$proScanned = $proFiles !== [];
+
+if (! $freeScanned) {
+    fwrite(STDERR, "Note: livewire/flux not installed in vendor; flux.free left unchanged.\n");
 }
 
-// Whether Flux's component blades were actually available to scan. When they
-// aren't, flux.normal can't tell "removed" from "Flux not installed", so that
-// group is never warned about or pruned.
-$fluxScanned = $fluxFiles !== [];
-
-if (! $fluxScanned) {
-    fwrite(STDERR, "Note: Flux not installed in vendor; flux.normal left unchanged.\n");
+if (! $proScanned) {
+    fwrite(STDERR, "Note: livewire/flux-pro not installed in vendor; flux.pro left unchanged.\n");
 }
 
 // Names the starter kit overrides locally with Lucide blade files (its own
@@ -232,24 +251,33 @@ foreach ($fixtureFiles as $file) {
 }
 
 $fixtureIcons = array_keys(scanIcons($fixtureFiles));
-$fluxIcons = array_keys(scanIcons($fluxFiles));
-$allIcons = array_unique(array_merge($fixtureIcons, $fluxIcons));
+$freeIcons = array_keys(scanIcons($freeFiles));
+$proIcons = array_keys(scanIcons($proFiles));
+$allIcons = array_unique(array_merge($fixtureIcons, $freeIcons, $proIcons));
 
 $isOverride = fn (string $name): bool => isset($overrides[$name]);
 $isAnimated = fn (string $name): bool => in_array($name, ANIMATED_ICONS, true);
 
 // Classify by source. The starter-kit group is the app's own icons (heroicons +
-// lucide overrides). flux.normal are the extra icons only Flux's components pull
-// in — excluding anything already in starter-kit so no icon is duplicated across
-// the two groups. animated is keyed off the name.
+// lucide overrides). The flux group is the extra icons only Flux's components
+// pull in — excluding anything already in starter-kit so no icon is duplicated
+// across the two groups. animated is keyed off the name.
 $heroicons = array_filter($fixtureIcons, fn (string $name): bool => ! $isOverride($name) && ! $isAnimated($name));
 $lucide = array_filter($allIcons, $isOverride);
 $animated = array_filter($allIcons, fn (string $name): bool => ! $isOverride($name) && $isAnimated($name));
 
 $starterKitSet = array_flip(array_merge($heroicons, $lucide));
-$normal = array_filter(
-    $fluxIcons,
-    fn (string $name): bool => ! $isAnimated($name) && ! isset($starterKitSet[$name])
+$isFluxOnly = fn (string $name): bool => ! $isAnimated($name) && ! isset($starterKitSet[$name]);
+
+$free = array_filter($freeIcons, $isFluxOnly);
+
+// An icon both packages reference belongs to free: a free-only app renders it, so
+// it must survive the Pro group being skipped. That makes pro strictly the icons
+// no free component can ask for.
+$freeSet = array_flip($freeIcons);
+$pro = array_filter(
+    $proIcons,
+    fn (string $name): bool => $isFluxOnly($name) && ! isset($freeSet[$name])
 );
 
 $config = is_file($configFile) ? require $configFile : [];
@@ -297,10 +325,10 @@ function mergeGroup(array $existing, array $scanned, callable $value, bool $prun
     return [$existing, $new, $stale];
 }
 
-// Nested groups: [scanned names, value seed, reliable?]. Heroicons and
-// flux.normal need a Lucide mapping (empty); lucide and animated map to
-// themselves. "reliable" marks whether a missing scan means "removed" — false
-// for flux.normal when Flux isn't installed, so it's never warned about/pruned.
+// Nested groups: [scanned names, value seed, reliable?]. Heroicons, flux.free and
+// flux.pro need a Lucide mapping (empty); lucide and animated map to themselves.
+// "reliable" marks whether a missing scan means "removed" — false for a flux group
+// whose package isn't installed, so it's never warned about/pruned.
 $empty = fn (string $name): string => '';
 $self = fn (string $name): string => $name;
 $groups = [
@@ -309,7 +337,10 @@ $groups = [
         'lucide' => [array_values($lucide), $self, true],
     ],
     'flux' => [
-        'normal' => [array_values($normal), $empty, $fluxScanned],
+        'free' => [array_values($free), $empty, $freeScanned],
+        // pro is derived by subtracting free's icons, so an unscanned free
+        // package would wrongly widen it — trust it only when both were scanned.
+        'pro' => [array_values($pro), $empty, $proScanned && $freeScanned],
         'animated' => [array_values($animated), $self, true],
     ],
 ];

@@ -15,7 +15,10 @@ beforeEach(function () {
             ],
         ],
         'flux' => [
-            'normal' => [
+            'free' => [
+                'exclamation-triangle' => 'triangle-alert',
+            ],
+            'pro' => [
                 'calendar' => 'calendar',
             ],
         ],
@@ -29,8 +32,20 @@ it('lists every configured icon with its original and replacement', function () 
         ->assertSee('search')
         ->assertSee('house')
         ->assertSee('layout-grid')
+        ->assertSee('exclamation-triangle')
         ->assertSee('calendar')
-        ->assertSee('5 icons');
+        ->assertSee('6 icons');
+});
+
+it('lists the free and pro flux icons as separate sections', function () {
+    // The page maps over whatever groups the config carries, so the pro group
+    // gets its own section — and its icons are Heroicons like free's.
+    Livewire::test('tailor::icon-list')
+        ->assertSee('free')
+        ->assertSee('pro')
+        ->assertSeeHtml('data-hero="exclamation-triangle"')
+        ->assertSeeHtml('data-hero="calendar"')
+        ->assertSeeHtml('data-lucide="triangle-alert"');
 });
 
 it('renders the original heroicon glyph and the lucide replacement glyph', function () {
