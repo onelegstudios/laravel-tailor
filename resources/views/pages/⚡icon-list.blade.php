@@ -14,7 +14,7 @@ class extends Component
     /**
      * The configured icon sections, filtered by the current search term.
      *
-     * @return Collection<int, array{group: string, set: string, originalIcon: string|null, icons: array<int, array{original: string, replacement: string}>}>
+     * @return Collection<int, array{kit: string, kitLabel: string, group: string, set: string, originalIcon: string, replacementIcon: string, replacementLabel: string, icons: array<int, array{original: string, replacement: string}>}>
      */
     #[Computed]
     public function sections(): Collection
@@ -44,35 +44,87 @@ class extends Component
     }
 
     /**
-     * Flatten the nested icon config into displayable sections.
+     * Every kit's sections, chained so both kits render on the page in the order
+     * they are offered (Hero before Lucide).
      *
-     * @return Collection<int, array{group: string, set: string, originalIcon: string|null, icons: array<int, array{original: string, replacement: string}>}>
+     * @return Collection<int, array{kit: string, kitLabel: string, group: string, set: string, originalIcon: string, replacementIcon: string, replacementLabel: string, icons: array<int, array{original: string, replacement: string}>}>
      */
     protected function allSections(): Collection
+    {
+        return $this->heroSections()->concat($this->lucideSections());
+    }
+
+    /**
+     * HeroKit's swaps: a flat lucide-name => heroicon-name map, so the original
+     * glyph is a Lucide icon and the replacement is a Heroicon.
+     *
+     * @return Collection<int, array{kit: string, kitLabel: string, group: string, set: string, originalIcon: string, replacementIcon: string, replacementLabel: string, icons: array<int, array{original: string, replacement: string}>}>
+     */
+    protected function heroSections(): Collection
+    {
+        $icons = config('tailor.settings.kits.hero.icons', []);
+
+        if ($icons === []) {
+            return collect();
+        }
+
+        return collect([[
+            'kit' => 'hero',
+            'kitLabel' => 'Hero kit',
+            'group' => 'starter-kit',
+            'set' => 'lucide',
+            'originalIcon' => 'lucide',
+            'replacementIcon' => 'heroicon',
+            'replacementLabel' => 'Heroicon replacement',
+            'icons' => $this->normalizeIcons($icons),
+        ]]);
+    }
+
+    /**
+     * LucideKit's swaps: a nested group => set => (original => lucide-name) map,
+     * so the replacement is always a Lucide icon and the original glyph depends
+     * on the set (Flux's icons are Heroicons, except its animated "loading"
+     * pseudo-icon, a spinner).
+     *
+     * @return Collection<int, array{kit: string, kitLabel: string, group: string, set: string, originalIcon: string, replacementIcon: string, replacementLabel: string, icons: array<int, array{original: string, replacement: string}>}>
+     */
+    protected function lucideSections(): Collection
     {
         return collect(config('tailor.settings.kits.lucide.icons', []))
             ->flatMap(fn (array $sets, string $group): array => collect($sets)
                 ->map(fn (array $icons, string $set): array => [
+                    'kit' => 'lucide',
+                    'kitLabel' => 'Lucide kit',
                     'group' => $group,
                     'set' => $set,
-                    // Which icon set the original names belong to, so the page
-                    // can render the original glyph. Flux's icons are Heroicons,
-                    // except its animated "loading" pseudo-icon (a spinner).
                     'originalIcon' => match ($set) {
                         'lucide' => 'lucide',
                         'animated' => 'spinner',
                         default => 'heroicon',
                     },
-                    'icons' => collect($icons)
-                        ->map(fn (string $replacement, string $original): array => [
-                            'original' => $original,
-                            'replacement' => $replacement,
-                        ])
-                        ->values()
-                        ->all(),
+                    'replacementIcon' => 'lucide',
+                    'replacementLabel' => 'Lucide replacement',
+                    'icons' => $this->normalizeIcons($icons),
                 ])
                 ->values()
                 ->all());
+    }
+
+    /**
+     * Flatten a flat original => replacement map into displayable icon rows.
+     *
+     * @param  array<string, string>  $icons
+     * @return array<int, array{original: string, replacement: string}>
+     */
+    protected function normalizeIcons(array $icons): array
+    {
+        return collect($icons)
+            ->map(fn (string $replacement, string $original): array => [
+                'original' => $original,
+                'replacement' => $replacement,
+            ])
+            ->values()
+            ->all();
     }
 };
 ?>
@@ -82,7 +134,7 @@ class extends Component
         <div>
             <h1>Tailor icons</h1>
             <p class="tailor-subtitle">
-                Every icon mapped in <code>config/tailor.php</code>, with its original name and Lucide replacement.
+                Every icon swap defined in <code>config/tailor.php</code>, grouped by kit, with each original name and its replacement.
             </p>
         </div>
         <span class="tailor-count">{{ $this->total }} {{ \Illuminate\Support\Str::plural('icon', $this->total) }}</span>
@@ -93,13 +145,27 @@ class extends Component
         <input
             type="search"
             wire:model.live.debounce.200ms="search"
-            placeholder="Filter by original or Lucide name…"
+            placeholder="Filter by original or replacement name…"
             autofocus
         >
     </div>
 
+    @php($currentKit = null)
     @forelse ($this->sections as $section)
-        <section class="tailor-section" wire:key="section-{{ $section['group'] }}-{{ $section['set'] }}">
+        @if ($section['kit'] !== $currentKit)
+            @php($currentKit = $section['kit'])
+            <div class="tailor-kit" wire:key="kit-{{ $section['kit'] }}">
+                <span class="tailor-kit-badge">Kit</span>
+                <span class="tailor-kit-name">{{ $section['kitLabel'] }}</span>
+                <span class="tailor-kit-desc">
+                    {{ $section['kit'] === 'hero'
+                        ? 'Reverts the starter kit’s Lucide overrides back to Heroicons'
+                        : 'Swaps the starter kit’s Heroicons for their Lucide equivalents' }}
+                </span>
+            </div>
+        @endif
+
+        <section class="tailor-section" wire:key="section-{{ $section['kit'] }}-{{ $section['group'] }}-{{ $section['set'] }}">
             <h2>
                 <span class="tailor-group">{{ $section['group'] }}</span>
                 <span class="tailor-set">{{ $section['set'] }}</span>
@@ -110,12 +176,12 @@ class extends Component
                 <thead>
                     <tr>
                         <th>Original</th>
-                        <th>Lucide replacement</th>
+                        <th>{{ $section['replacementLabel'] }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($section['icons'] as $icon)
-                        <tr wire:key="icon-{{ $section['group'] }}-{{ $section['set'] }}-{{ $icon['original'] }}">
+                        <tr wire:key="icon-{{ $section['kit'] }}-{{ $section['group'] }}-{{ $section['set'] }}-{{ $icon['original'] }}">
                             <td>
                                 <span class="tailor-icon-cell">
                                     @if ($section['originalIcon'] === 'heroicon')
@@ -142,7 +208,11 @@ class extends Component
                                 @else
                                     <span class="tailor-icon-cell">
                                         <span @class(['tailor-glyph', 'tailor-glyph--spin' => $section['originalIcon'] === 'spinner']) wire:ignore>
-                                            <i data-lucide="{{ $icon['replacement'] }}"></i>
+                                            @if ($section['replacementIcon'] === 'heroicon')
+                                                <span class="tailor-heroicon" data-hero="{{ $icon['replacement'] }}"></span>
+                                            @else
+                                                <i data-lucide="{{ $icon['replacement'] }}"></i>
+                                            @endif
                                         </span>
                                         <code>{{ $icon['replacement'] }}</code>
                                     </span>

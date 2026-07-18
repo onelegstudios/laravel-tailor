@@ -3,6 +3,11 @@
 use Livewire\Livewire;
 
 beforeEach(function () {
+    config()->set('tailor.settings.kits.hero.icons', [
+        'chevrons-up-down' => 'chevron-up-down',
+        'book-open-text' => 'book-open',
+    ]);
+
     config()->set('tailor.settings.kits.lucide.icons', [
         'starter-kit' => [
             'heroicons' => [
@@ -34,7 +39,25 @@ it('lists every configured icon with its original and replacement', function () 
         ->assertSee('layout-grid')
         ->assertSee('exclamation-triangle')
         ->assertSee('calendar')
-        ->assertSee('6 icons');
+        // 6 Lucide-kit icons + 2 Hero-kit icons.
+        ->assertSee('8 icons');
+});
+
+it('shows both kits as clearly labelled sections', function () {
+    Livewire::test('tailor::icon-list')
+        ->assertSee('Hero kit')
+        ->assertSee('Lucide kit')
+        ->assertSee('Heroicon replacement')
+        ->assertSee('Lucide replacement');
+});
+
+it('renders the hero kit with lucide originals and heroicon replacements', function () {
+    // HeroKit reverses the Lucide overrides, so the original glyph is a Lucide
+    // icon and the replacement is a Heroicon (the opposite of the Lucide kit).
+    Livewire::test('tailor::icon-list')
+        ->assertSee('chevrons-up-down')
+        ->assertSeeHtml('data-lucide="chevrons-up-down"')  // original lucide glyph
+        ->assertSeeHtml('data-hero="chevron-up-down"');    // heroicon replacement
 });
 
 it('lists the free and pro flux icons as separate sections', function () {
